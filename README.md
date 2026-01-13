@@ -135,7 +135,6 @@ ENF_AC_DCH/
 ├── chemical_washes_CAP3.csv
 ├── requirements.txt
 ├── README.md
-├── README.Rmd
 └── docs/
     ├── Propuesta_Marinovic_FINAL.pdf
     ├── Documentacion_Tecnica_FINAL.pdf
