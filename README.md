@@ -22,17 +22,23 @@ Los enfriadores de ácido sulfúrico CAP-3 son equipos críticos dentro del circ
 ## 2) Solución
 
 Dashboard web en **Streamlit (Python)** que:
-✅ Monitorea parámetros de proceso y operación (temperaturas ácido/agua, flujos, conductividad, velocidad soplador, bypass, etc.)
-​
-✅ Calcula eficiencia térmica, coeficiente U, carga térmica (Q) y factor de ensuciamiento (Rf / fouling) con ecuaciones termodinámicas implementadas en applythermalmodel()
-​
-✅ Construye un Índice de Criticidad (0–100) con 4 componentes ponderados (temperatura 30%, fouling 35%, eficiencia 25%, días desde lavado 10%) y clasificación cualitativa (Baja/Media/Alta/Crítica)
-​
-✅ Predice tendencia de fouling y "días a límite crítico" con Machine Learning (RandomForestClassifier + GradientBoosting para predicción de lavados en 30 días, según datos históricos disponibles)
-​
-✅ Genera Reporte PDF PRO con tabla comparativa de los 3 enfriadores, resumen ejecutivo automático, gráficos de tendencia y timeline de lavados históricos (usando ReportLab)
+- Monitorea parámetros de proceso y operación (temperaturas ácido/agua, flujos, conductividad, velocidad soplador, bypass, etc.)​
+- Calcula eficiencia térmica, coeficiente U, carga térmica (Q) y factor de ensuciamiento (Rf / fouling) con ecuaciones termodinámicas implementadas en applythermalmodel()
+​- Construye un Índice de Criticidad (0–100) con 4 componentes ponderados (temperatura 30%, fouling 35%, eficiencia 25%, días desde lavado 10%) y clasificación cualitativa (Baja/Media/Alta/Crítica)
+- ​Predice tendencia de fouling y "días a límite crítico" con Machine Learning (RandomForestClassifier + GradientBoosting para predicción de lavados en 30 días, según datos históricos disponibles)
+- Genera Reporte PDF PRO con tabla comparativa de los 3 enfriadores, resumen ejecutivo automático, gráficos de tendencia y timeline de lavados históricos (usando ReportLab)
+
+### 2.1) Justificación económica
+CAPEX = USD 0, OPEX = USD 0/año (desarrollo interno + IT).
+Beneficios anuales: USD 600,000 → ROI = ∞, Payback = Inmediato, VPN 10 años = USD 3.68M
+Fuente ahorro	Beneficio anual
+Paros evitados	USD 358K
+Limpieza optimizada	USD 16K
+Energía	USD 64K
+Calidad producto	USD 62K
 
 ---
+
 
 ## 3) KPI principales (qué mide el sistema)
 
