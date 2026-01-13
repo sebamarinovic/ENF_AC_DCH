@@ -154,29 +154,7 @@ Esto evita falsos diagnósticos en períodos de baja carga.
 
 ---
 
-## 6. Índice de criticidad operacional
-
-El **Índice de Criticidad (0–100)** es el criterio principal para recomendar limpieza química.
-
-### Componentes y ponderación
-
-| Variable | Peso |
-|--------|------|
-| Temperatura ácido salida | 30% |
-| Fouling (Rf) | 35% |
-| Eficiencia térmica | 25% |
-| Días desde último lavado | 10% |
-
-### Clasificación
-
-- **0–30:** Baja 🟢  
-- **30–60:** Media 🟡  
-- **60–80:** Alta 🟠  
-- **≥80:** Crítica 🔴  
-
----
-
-## 7. Tendencias y pendientes
+## 6. Tendencias y pendientes
 
 El sistema calcula pendientes solo bajo condición cargada:
 
@@ -187,7 +165,7 @@ Además, estima **días a condición crítica** cuando la tendencia es positiva 
 
 ---
 
-## 8. Reporte PDF ejecutivo
+## 7. Reporte PDF ejecutivo
 
 El sistema genera automáticamente un PDF que incluye:
 
@@ -200,9 +178,9 @@ El sistema genera automáticamente un PDF que incluye:
 
 ---
 
-## 9. Justificación económica
+## 8. Justificación económica
 
-### 9.1 Enfoque
+### 8.1 Enfoque
 
 Proyecto desarrollado **sin CAPEX**, utilizando:
 
@@ -213,7 +191,7 @@ Proyecto desarrollado **sin CAPEX**, utilizando:
 
 ---
 
-### 9.2 Beneficios económicos
+### 8.2 Beneficios económicos
 
 - Reducción de limpiezas químicas innecesarias.
 - Prevención de eventos críticos.
@@ -223,7 +201,7 @@ Proyecto desarrollado **sin CAPEX**, utilizando:
 
 ---
 
-### 9.3 Costos de implementación
+### 8.3 Costos de implementación
 
 | Concepto | Costo |
 |-------|------|
