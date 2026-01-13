@@ -58,66 +58,87 @@ Se desarrolló un **dashboard web en Streamlit (Python)** que:
 
 ### 4.1 Carga térmica (Q)
 
-Balance energético del agua de enfriamiento:
+La carga térmica se calcula mediante el balance energético del agua de enfriamiento:
 
-\[
-Q = \dot{m} \cdot C_p \cdot (T_{out} - T_{in})
-\]
+**Q = ṁ · Cp · (T_out − T_in)**
 
 Donde:
+- **ṁ**: flujo másico de agua [kg/s]  
+- **Cp**: calor específico del agua [J/kg·K]  
+- **T_out**, **T_in**: temperatura de salida y entrada del agua [°C]  
 
-- \(\dot{m}\): flujo másico del agua  
-- \(C_p\): calor específico  
-- \(\Delta T\): salto térmico  
+**Implementación en el sistema (`app.py`):**
+- `Q_water_W = m_dot_water * Cp_water * (T_w_out - T_w_in)`
+- `Q_used_W = min(Q_water_W, Q_acid_est)`
 
-En el sistema:
-- Q se reporta como **promedio de ventana (MW)**.
-- Se compara contra **Q de diseño ajustado**.
+En el dashboard:
+- Q se reporta como **promedio de ventana (MW)**  
+- Se compara contra **Q de diseño ajustado** para evaluar sobrecarga térmica
 
 ---
 
 ### 4.2 Diferencia de temperatura media logarítmica (LMTD)
 
-\[
-\Delta T_{lm} = \frac{\Delta T_1 - \Delta T_2}{\ln\left(\frac{\Delta T_1}{\Delta T_2}\right)}
-\]
+La LMTD se calcula como:
 
-Implementada con validaciones para evitar inestabilidades numéricas.
+**LMTD = (ΔT₁ − ΔT₂) / ln(ΔT₁ / ΔT₂)**
 
----
+Donde:
+- **ΔT₁ = T_hot_in − T_cold_out**
+- **ΔT₂ = T_hot_out − T_cold_in**
 
-### 4.3 Coeficiente global de transferencia (U)
-
-\[
-Q = U \cdot A \cdot \Delta T_{lm}
-\]
-
-- Se recalcula U considerando área efectiva real.
-- Se compara contra U limpio de diseño.
+**Implementación robusta en el sistema:**
+- Validación de ΔT > 0
+- Manejo de casos ΔT₁ ≈ ΔT₂ para evitar inestabilidad numérica
+- Función dedicada: `safe_lmtd()`
 
 ---
 
-### 4.4 Eficiencia térmica
+### 4.3 Coeficiente global de transferencia de calor (U)
 
-\[
-\eta = \frac{Q_{real}}{Q_{diseño\ ajustado}} \cdot 100
-\]
+El coeficiente global se obtiene desde:
 
-Evita penalizar equipos con tubos aislados o fuera de servicio.
+**U = Q / (A · LMTD)**
+
+Donde:
+- **A**: área efectiva de intercambio térmico [m²]
+
+En el sistema:
+- Se calcula **U real instantáneo**
+- Se compara contra **U limpio de diseño**
+- Se reporta **U promedio** y **% respecto a condición limpia**
 
 ---
 
-### 4.5 Factor de ensuciamiento (Rf)
+### 4.4 Factor de ensuciamiento (Rf – Fouling)
 
-El fouling se modela como resistencia térmica adicional:
+El factor de ensuciamiento se estima a partir de resistencias térmicas:
 
-- Unidad base: \(m^2K/W\)
-- Visualización escalada para análisis operacional.
+**Rf = (1 / U_real) − (1 / U_limpio)**
 
-Se utiliza un enfoque robusto:
-- Método directo vía resistencias térmicas.
-- Método indirecto vía pérdida de eficiencia.
-- Suavizado mediante medias móviles.
+Características del cálculo:
+- Filtrado por condición operacional válida
+- Escalado a unidades visibles (**×10⁻⁴ m²·K/W**)
+- Suavizado mediante media móvil para reducir ruido
+
+---
+
+### 4.5 Índice de criticidad (0–100)
+
+Índice compuesto para priorización operacional:
+
+**Criticidad = 100 · (  
+0.30 · Temperatura +  
+0.35 · Fouling +  
+0.25 · Eficiencia +  
+0.10 · Días sin lavado  
+)**
+
+Clasificación:
+- **0–30**: Baja 🟢  
+- **30–60**: Media 🟡  
+- **60–80**: Alta 🟠  
+- **80–100**: Crítica 🔴
 
 ---
 
