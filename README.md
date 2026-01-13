@@ -128,21 +128,20 @@ El sistema genera un PDF con:
 ---
 
 ## 6) Arquitectura del repositorio
-.
 ├── app.py
 ├── acid_coolers_CAP3_synthetic_2years.csv
 ├── chemical_washes_CAP3.csv
 ├── docs/
-│ ├── Propuesta_Marinovic_FINAL.pdf
-│ ├── Documentacion_Tecnica_FINAL.pdf
-│ └── images/
-│ ├── 01_resumen_ejecutivo.png
-│ ├── 02_termico.png
-│ ├── 03_fouling.png
-│ ├── 04_criticidad.png
-│ ├── 05_lavados_timeline.png
-│ ├── 06_ml.png
-│ └── 07_pdf_pro.png
+│   ├── Propuesta_Marinovic_FINAL.pdf
+│   ├── Documentacion_Tecnica_FINAL.pdf
+│   └── images/
+│       ├── 01_resumen_ejecutivo.png
+│       ├── 02_termico.png
+│       ├── 03_fouling.png
+│       ├── 04_criticidad.png
+│       ├── 05_lavados_timeline.png
+│       └── 06_pdf.png
+├── README.Rmd
 └── requirements.txt
 
 ---
