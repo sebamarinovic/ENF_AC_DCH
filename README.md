@@ -7,26 +7,26 @@
 ---
 
 ## 1) Problema operacional
+Los enfriadores de ácido sulfúrico CAP-3 son equipos críticos dentro del circuito de absorción. La degradación térmica por ensuciamiento (fouling) y las variaciones en las condiciones de agua de enfriamiento pueden provocar:
 
-Los enfriadores de ácido sulfúrico CAP-3 son **equipos críticos**. La degradación térmica por ensuciamiento (fouling), variaciones de agua de enfriamiento y pérdida de área efectiva por **tubos aislados** puede provocar:
+- Sobrecalentamiento del ácido, con riesgo para la seguridad del proceso y la estabilidad operacional.
+​
+- Mantenimiento reactivo y más costoso, al no anticipar la evolución del fouling.​
 
-- Sobrecalentamiento del ácido (riesgo de seguridad y estabilidad operacional)
-- Mantenimiento reactivo y costoso
-- Limpiezas químicas no optimizadas
-- Potenciales paros no programados y pérdida de disponibilidad
-
+- Limpiezas químicas poco oportunas (muy tempranas o demasiado tardías), que reducen la eficiencia global del sistema.
+​
+- Potenciales paros no programados y pérdida de disponibilidad de los enfriadores y de la planta asociada.
+​
 ---
 
 ## 2) Solución
 
 Dashboard web en **Streamlit (Python)** que:
-
-✅ Monitorea parámetros de proceso y operación  
-✅ Calcula **eficiencia térmica**, **U**, **carga térmica (Q)** y **factor de ensuciamiento (Rf / fouling)**  
-✅ Construye un **Índice de Criticidad (0–100)** con reglas y ponderaciones  
-✅ Predice tendencia y “días a límite” con **Machine Learning** (según disponibilidad de datos)  
-✅ Incorpora módulo de **Gestión de Tubos Aislados** (recalcula capacidad/diseño automáticamente)  
-✅ Genera **Reporte PDF PRO** (tabla comparativa + resumen ejecutivo + historial de lavados tipo timeline)
+✅ Monitorea parámetros de proceso y operación (temperaturas ácido/agua, flujos, conductividad, velocidad soplador, bypass, etc.)​
+✅ Calcula eficiencia térmica, coeficiente U, carga térmica (Q) y factor de ensuciamiento (Rf / fouling) con ecuaciones termodinámicas implementadas en applythermalmodel()​
+✅ Construye un Índice de Criticidad (0–100) con 4 componentes ponderados (temperatura 30%, fouling 35%, eficiencia 25%, días desde lavado 10%) y clasificación cualitativa (Baja/Media/Alta/Crítica)​
+✅ Predice tendencia de fouling y "días a límite crítico" con Machine Learning (RandomForestClassifier + GradientBoosting para predicción de lavados en 30 días, según datos históricos disponibles)​
+✅ Genera Reporte PDF PRO con tabla comparativa de los 3 enfriadores, resumen ejecutivo automático, gráficos de tendencia y timeline de lavados históricos (usando ReportLab)
 
 ---
 
@@ -128,24 +128,16 @@ El sistema genera un PDF con:
 ---
 
 ## 6) Arquitectura del repositorio
-```text
-ENF_AC_DCH/
-├── app.py
-├── acid_coolers_CAP3_synthetic_2years.csv
-├── chemical_washes_CAP3.csv
-├── requirements.txt
-├── README.md
-└── docs/
-    ├── Propuesta_Marinovic_FINAL.pdf
-    ├── Documentacion_Tecnica_FINAL.pdf
-    └── images/
-        ├── 01_resumen_ejecutivo.png
-        ├── 02_termico.png
-        ├── 03_fouling.png
-        ├── 04_criticidad.png
-        ├── 05_lavados_timeline.png
-        └── 06_pdf.png
 ```
+├── app.py                                  # Aplicación principal Streamlit
+├── acid_coolers_CAP3_synthetic_2years.csv  # Datos históricos de operación (ejemplo)
+├── chemical_washes_CAP3.csv                # Historial de lavados (ejemplo)
+├── Documentacion_Tecnica_v5.md             # Documento técnico del sistema
+├── Manual_Usuario_Dashboard_v5.md          # Manual de usuario del dashboard
+├── Analisis_Economico_ROI_v5.md            # Análisis económico y ROI del proyecto
+└── README.md                               # Este archivo
+```
+
 ### 📸 Vistas principales del sistema
 
 ![Resumen Ejecutivo](docs/images/01_resumen_ejecutivo.png)
