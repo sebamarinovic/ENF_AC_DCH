@@ -143,7 +143,6 @@ El sistema genera un PDF con:
 │       └── 06_pdf.png
 ├── README.Rmd
 └── requirements.txt
-
 ---
 
 ## 7) Instalación y ejecución
