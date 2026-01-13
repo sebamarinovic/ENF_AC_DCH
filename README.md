@@ -1,5 +1,4 @@
 # Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3
-## "Secado / Interpaso / Final"
 author: "Sebastián Marinovic Leiva"
 ---
 
