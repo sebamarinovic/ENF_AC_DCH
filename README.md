@@ -128,8 +128,6 @@ El sistema genera un PDF con:
 ---
 
 ## 6) Arquitectura del repositorio
-## 6) Arquitectura del repositorio
-
 ```text
 ENF_AC_DCH/
 ├── app.py
@@ -149,6 +147,13 @@ ENF_AC_DCH/
         ├── 05_lavados_timeline.png
         └── 06_pdf.png
 ```
+### 📸 Vistas principales del sistema
+
+![Resumen Ejecutivo](docs/images/01_resumen_ejecutivo.png)
+![Análisis Térmico](docs/images/02_termico.png)
+![Fouling y eficiencia](docs/images/03_fouling.png)
+![Índice de criticidad](docs/images/04_criticidad.png)
+
 ---
 
 ## 7) Instalación y ejecución
@@ -160,4 +165,5 @@ ENF_AC_DCH/
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
+```
 
