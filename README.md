@@ -1,159 +1,271 @@
-# ❄️ Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3 (Secado / Interpaso / Final)
+---
+title: "❄️ Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3"
+subtitle: "Secado / Interpaso / Final"
+author: "Sebastián Marinovic Leiva"
+date: "Enero 2026"
+output:
+  github_document:
+    toc: true
+    toc_depth: 3
+---
 
-**Autor:** Sebastián Marinovic Leiva  
-**División:** Chuquicamata – Codelco | **Gerencia:** Fundición | **Superintendencia:** Planta de Ácido y Oxígeno  
-**Contexto:** Concurso “Me pongo la camiseta por Chuqui” – Innovación y Mejora Operacional (Sindicato 3)
+## Contexto general
+
+**División:** Chuquicamata – Codelco  
+**Gerencia:** Fundición  
+**Superintendencia:** Planta de Ácido y Oxígeno  
+
+**Iniciativa:** Concurso *“Me pongo la camiseta por Chuqui”* – Sindicato 3  
+**Tipo de proyecto:** Innovación, mejora operacional y confiabilidad de activos críticos  
+
+Este repositorio documenta el desarrollo e implementación de un **sistema digital predictivo** para la gestión térmica y de ensuciamiento de los enfriadores de ácido sulfúrico de la planta CAP-3.
 
 ---
 
-## 1) Problema operacional
-Los enfriadores de ácido sulfúrico CAP-3 son equipos críticos dentro del circuito de absorción. La degradación térmica por ensuciamiento (fouling) y las variaciones en las condiciones de agua de enfriamiento pueden provocar:
+## 1. Problema operacional
 
-- Sobrecalentamiento del ácido, con riesgo para la seguridad del proceso y la estabilidad operacional.
-​
-- Mantenimiento reactivo y más costoso, al no anticipar la evolución del fouling.​
+Los enfriadores de ácido sulfúrico de CAP-3 (Torre de Secado, Torre de Absorción Intermedia y Torre de Absorción Final) son equipos críticos dentro del circuito de absorción.
 
-- Limpiezas químicas poco oportunas (muy tempranas o demasiado tardías), que reducen la eficiencia global del sistema.
-​
-- Potenciales paros no programados y pérdida de disponibilidad de los enfriadores y de la planta asociada.
-​
----
+La degradación térmica por ensuciamiento (*fouling*) y las variaciones en la calidad y condiciones del agua de enfriamiento pueden generar:
 
-## 2) Solución
-
-Dashboard web en **Streamlit (Python)** que:
-- Monitorea parámetros de proceso y operación (temperaturas ácido/agua, flujos, conductividad, velocidad soplador, bypass, etc.)​
-- Calcula eficiencia térmica, coeficiente U, carga térmica (Q) y factor de ensuciamiento (Rf / fouling) con ecuaciones termodinámicas implementadas en applythermalmodel()
-​- Construye un Índice de Criticidad (0–100) con 4 componentes ponderados (temperatura 30%, fouling 35%, eficiencia 25%, días desde lavado 10%) y clasificación cualitativa (Baja/Media/Alta/Crítica)
-- ​Predice tendencia de fouling y "días a límite crítico" con Machine Learning (RandomForestClassifier + GradientBoosting para predicción de lavados en 30 días, según datos históricos disponibles)
-- Genera Reporte PDF PRO con tabla comparativa de los 3 enfriadores, resumen ejecutivo automático, gráficos de tendencia y timeline de lavados históricos (usando ReportLab)
-
-### 2.1) Justificación económica
-CAPEX = USD 0, OPEX = USD 0/año (desarrollo interno + IT).
-Beneficios anuales: USD 600,000 → ROI = ∞, Payback = Inmediato, VPN 10 años = USD 3.68M
-Fuente ahorro	Beneficio anual
-Paros evitados	USD 358K
-Limpieza optimizada	USD 16K
-Energía	USD 64K
-Calidad producto	USD 62K
+- Sobrecalentamiento del ácido, con riesgos para la seguridad del proceso.
+- Operación cercana o fuera de límites de diseño.
+- Mantenimiento reactivo y aumento de costos operacionales.
+- Limpiezas químicas mal temporizadas (anticipadas o tardías).
+- Pérdida de eficiencia térmica y disponibilidad de planta.
+- Mayor probabilidad de paros no programados.
 
 ---
 
+## 2. Solución implementada (`app.py`)
 
-## 3) KPI principales (qué mide el sistema)
+Se desarrolló un **dashboard web en Streamlit (Python)** que permite:
+
+- Monitorear variables de proceso y operación:
+  - Temperaturas de ácido y agua
+  - Flujos
+  - Conductividad
+  - Carga de producción
+  - Estados operacionales (sopladores, bypass, etc.)
+
+- Calcular KPIs térmicos mediante modelos de ingeniería:
+  - Carga térmica (Q)
+  - Coeficiente global de transferencia (U)
+  - Eficiencia térmica
+  - Factor de ensuciamiento (Rf)
+
+- Construir un **Índice de Criticidad (0–100)** para priorizar lavados químicos.
+
+- Analizar **tendencias y pendientes** solo bajo condición cargada.
+
+- Generar **reportes PDF ejecutivos** automáticos con tablas comparativas, gráficos y recomendaciones priorizadas.
+
+---
+
+## 3. Modelo de ingeniería implementado
 
 ### 3.1 Carga térmica (Q)
-Se estima el calor transferido con base en el balance térmico:
 
-**Q = ṁ · Cp · ΔT**
+La carga térmica se calcula a partir del balance energético del agua de enfriamiento:
+
+\[
+Q = \dot{m} \cdot C_p \cdot (T_{out} - T_{in})
+\]
 
 Donde:
-- ṁ = flujo másico
-- Cp = calor específico
-- ΔT = diferencia de temperatura entre entrada/salida
 
-> En el sistema se reporta **Q promedio en MW** y su % vs diseño para evidenciar sobrecarga térmica.
+- \(\dot{m}\): flujo másico del agua  
+- \(C_p\): calor específico  
+- \(\Delta T\): salto térmico  
 
----
-
-### 3.2 Coeficiente global de transferencia (U)
-La transferencia de calor global se expresa como:
-
-**Q = U · A · ΔT\_lm**
-
-- U: coeficiente global
-- A: área efectiva de transferencia
-- ΔT\_lm: diferencia de temperatura media logarítmica
+En el sistema:
+- Se reporta **Q promedio (MW)** por ventana de análisis.
+- Se compara con **Q de diseño ajustado**, considerando la condición real del equipo.
 
 ---
 
-### 3.3 Eficiencia térmica (%)
-Mide desempeño vs diseño (ajustado por condición real):
+### 3.2 Diferencia de temperatura media logarítmica (LMTD)
 
-**η\_térmica = (Q\_actual / Q\_diseño\_ajustado) · 100**
+\[
+\Delta T_{lm} = \frac{\Delta T_1 - \Delta T_2}{\ln\left(\frac{\Delta T_1}{\Delta T_2}\right)}
+\]
 
-Clave: si hay **tubos aislados**, el sistema ajusta el diseño para no “castigar” artificialmente al equipo.
+Implementada con validaciones para evitar errores numéricos en condiciones cercanas a equilibrio térmico.
 
 ---
 
-### 3.4 Factor de ensuciamiento (Rf / fouling)
-Representa resistencia adicional por depósitos:
+### 3.3 Coeficiente global de transferencia (U)
 
-- Unidades típicas: **m²·K/W** (en el dashboard se muestra en escala “visible”, p.ej. ×10⁻⁴)
+\[
+Q = U \cdot A \cdot \Delta T_{lm}
+\]
 
-El sistema implementa un enfoque “robusto” combinando:
-- Método directo vía U (resistencias térmicas)
+El sistema recalcula \(U\) considerando:
+
+- Área efectiva disponible
+- Tubos aislados o fuera de servicio
+- Condición real de operación
+
+---
+
+### 3.4 Eficiencia térmica
+
+\[
+\eta_{térmica} = \frac{Q_{real}}{Q_{diseño\ ajustado}} \cdot 100
+\]
+
+Esto evita penalizar artificialmente equipos con reducción real de área de transferencia.
+
+---
+
+### 3.5 Factor de ensuciamiento (Rf / fouling)
+
+El ensuciamiento se modela como una resistencia térmica adicional:
+
+- Unidad base: \(m^2 \cdot K / W\)
+- Visualización escalada para análisis operacional
+
+El sistema utiliza un enfoque robusto:
+
+- Método directo vía resistencias térmicas
 - Método indirecto vía pérdida de eficiencia
-- Suavizado (media móvil) para reducir ruido
+- Suavizado temporal (media móvil)
 
 ---
 
-### 3.5 Días desde último lavado + Historial
-- “Días sin lavado” como contexto operacional
-- Historial de lavados en **línea de tiempo (timeline)** y resumen por enfriador
+## 4. Índice de criticidad operacional
+
+Se define un **índice adimensional entre 0 y 100**, compuesto por:
+
+| Componente            | Peso |
+|----------------------|------|
+| Temperatura ácido    | 30%  |
+| Fouling (Rf)         | 35%  |
+| Eficiencia térmica   | 25%  |
+| Días desde lavado    | 10%  |
+
+Clasificación:
+
+- **0–30:** Baja 🟢  
+- **30–60:** Media 🟡  
+- **60–80:** Alta 🟠  
+- **80–100:** Crítica 🔴  
+
+Este índice es el **criterio principal** para recomendar limpieza química.
 
 ---
 
-### 3.6 Índice de criticidad (0–100)
-Score multifactorial para priorizar intervención entre:
-- Torre Secado (TS)
-- Torre Absorción Intermedia (TAI)
-- Torre Absorción Final (TAF)
+## 5. Tendencias y análisis bajo condición cargada
 
-Ejemplo de lógica (referencial):
-- Temperatura (ponderación alta por seguridad y calidad)
-- Eficiencia (desempeño directo)
-- Conductividad (calidad de agua: causa raíz frecuente de fouling)
-- Fouling (resultado acumulado del sistema)
-- Tiempo sin lavado (solo como contexto)
+El sistema calcula pendientes solo cuando el equipo se encuentra **realmente cargado**, definido por:
 
-Salida:
-- 0–30: Baja 🟢
-- 30–60: Media 🟡
-- 60–80: Alta 🟠
-- 80–100: Crítica 🔴
+- Carga térmica sobre umbral mínimo
+- Flujo de agua válido
+- Operación estable del sistema
+
+Ejemplos:
+- Pendiente de Rf \([m^2K/W \cdot día]\)
+- Pendiente de temperatura de salida \([°C/día]\)
+
+Esto evita falsas alarmas durante períodos de baja carga.
 
 ---
 
-## 4) Machine Learning (ML)
+## 6. Reporte PDF ejecutivo
 
-El ML se utiliza para **proyección de tendencia** y estimación de “días a límite” (térmico / fouling),
-**solo si existe data suficiente y representativa**.
+El sistema genera automáticamente un **PDF profesional**, que incluye:
 
-- Modelo: selección automática (según disponibilidad y calidad de datos)
-- Validación: métricas tipo R²/RMSE para regresión y diagnósticos de entrenabilidad
-- Fallback: si el ML no es entrenable (p. ej., datos insuficientes), el sistema usa un **Score Operacional** (reglas) para mantener recomendaciones consistentes.
-
----
-
-## 5) Reporte PDF PRO (salida ejecutiva)
-
-El sistema genera un PDF con:
-- **Resumen ejecutivo comparativo** (los 3 enfriadores)
-- Tabla de KPI (T salida, U, Rf, Q, días sin lavado, criticidad)
-- Recomendación priorizada automática
-- Sección de ML (si aplica) y diagnóstico
-- Historial de lavados en timeline
+- Resumen ejecutivo comparativo (TS / TAI / TAF)
+- Tabla de KPIs principales
+- Índice de criticidad y recomendación priorizada
+- Gráficos térmicos y de fouling
+- Historial de lavados en línea de tiempo
 
 ---
 
-## 6) Arquitectura del repositorio
-```
-├── app.py                                  # Aplicación principal Streamlit
-├── acid_coolers_CAP3_synthetic_2years.csv  # Datos históricos de operación (ejemplo)
-├── chemical_washes_CAP3.csv                # Historial de lavados (ejemplo)
-├── Documentacion_Tecnica_v5.md             # Documento técnico del sistema
-├── Manual_Usuario_Dashboard_v5.md          # Manual de usuario del dashboard
-├── Analisis_Economico_ROI_v5.md            # Análisis económico y ROI del proyecto
-└── README.md                               # Este archivo
-```
+## 7. Justificación económica del proyecto
 
-### 📸 Vistas principales del sistema
+### 7.1 Enfoque del análisis económico
 
-![Resumen Ejecutivo](docs/images/01_resumen_ejecutivo.png)
-![Análisis Térmico](docs/images/02_termico.png)
-![Fouling y eficiencia](docs/images/03_fouling.png)
-![Índice de criticidad](docs/images/04_criticidad.png)
+Este proyecto corresponde a una **iniciativa sin CAPEX**, desarrollada internamente utilizando:
+
+- Datos existentes
+- Conocimiento técnico del proceso
+- Herramientas open-source
+
+El análisis económico se centra en **ahorros OPEX** y **evitación de pérdidas operacionales**.
+
+---
+
+### 7.2 Costos evitados por lavados químicos no óptimos
+
+Cada lavado químico implica:
+
+- Insumos
+- Mano de obra
+- Pérdida de disponibilidad
+- Riesgos post-intervención
+
+El sistema permite optimizar la frecuencia, evitando lavados innecesarios o tardíos.
+
+---
+
+### 7.3 Costos evitados por eventos críticos
+
+La detección temprana de degradación térmica reduce la probabilidad de:
+
+- Restricciones de carga
+- Intervenciones no planificadas
+- Eventos de sobretemperatura
+
+Estos costos evitados representan un beneficio económico significativo.
+
+---
+
+### 7.4 Optimización energética
+
+Mantener los enfriadores en condición óptima implica:
+
+- Menor consumo energético específico
+- Operación más estable
+- Menor estrés térmico del sistema
+
+---
+
+### 7.5 Costos de implementación
+
+| Concepto                    | Costo |
+|----------------------------|-------|
+| Desarrollo del sistema     | 0 USD |
+| Licencias de software      | 0 USD |
+| Infraestructura adicional | 0 USD |
+| Sensores adicionales      | 0 USD |
+
+**CAPEX total:** **0 USD**
+
+---
+
+### 7.6 Retorno de la inversión (ROI)
+
+\[
+ROI = \frac{Beneficios}{Inversión} \rightarrow \infty
+\]
+
+El sistema genera valor económico desde el primer uso.
+
+---
+
+## 8. Arquitectura del repositorio
+
+```text
+ENF_AC_DCH/
+├── app.py
+├── acid_coolers_CAP3_synthetic_2years.csv
+├── chemical_washes_CAP3.csv
+├── Documentacion_Tecnica_v5.md
+├── Manual_Usuario_Dashboard_v5.md
+├── Analisis_Economico_ROI_v5.md
+└── README.md
 
 ---
 
