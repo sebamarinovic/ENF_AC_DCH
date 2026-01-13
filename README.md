@@ -1,12 +1,6 @@
-----
-title: "❄️ Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3"
-subtitle: "Secado / Interpaso / Final"
+# Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3
+## "Secado / Interpaso / Final"
 author: "Sebastián Marinovic Leiva"
-date: "Enero 2026"
-output:
-  github_document:
-    toc: true
-    toc_depth: 3
 ---
 
 ## Contexto del proyecto
