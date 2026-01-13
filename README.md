@@ -1,4 +1,4 @@
----
+----
 title: "❄️ Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3"
 subtitle: "Secado / Interpaso / Final"
 author: "Sebastián Marinovic Leiva"
@@ -9,64 +9,62 @@ output:
     toc_depth: 3
 ---
 
-## Contexto general
+## Contexto del proyecto
 
 **División:** Chuquicamata – Codelco  
 **Gerencia:** Fundición  
 **Superintendencia:** Planta de Ácido y Oxígeno  
 
 **Iniciativa:** Concurso *“Me pongo la camiseta por Chuqui”* – Sindicato 3  
-**Tipo de proyecto:** Innovación, mejora operacional y confiabilidad de activos críticos  
+**Tipo:** Innovación operacional y confiabilidad de activos  
 
-Este repositorio documenta el desarrollo e implementación de un **sistema digital predictivo** para la gestión térmica y de ensuciamiento de los enfriadores de ácido sulfúrico de la planta CAP-3.
+Este repositorio documenta el desarrollo e implementación de un **sistema digital de monitoreo predictivo** para los enfriadores de ácido sulfúrico de la planta CAP-3, integrando modelos de ingeniería térmica, análisis de ensuciamiento y criterios objetivos de criticidad operacional.
 
 ---
 
 ## 1. Problema operacional
 
-Los enfriadores de ácido sulfúrico de CAP-3 (Torre de Secado, Torre de Absorción Intermedia y Torre de Absorción Final) son equipos críticos dentro del circuito de absorción.
+Los enfriadores de ácido sulfúrico CAP-3 (Torre de Secado, Torre de Absorción Intermedia y Torre de Absorción Final) son activos críticos del circuito de absorción. Su degradación térmica por ensuciamiento (*fouling*) y variaciones en la calidad del agua de enfriamiento generan:
 
-La degradación térmica por ensuciamiento (*fouling*) y las variaciones en la calidad y condiciones del agua de enfriamiento pueden generar:
-
-- Sobrecalentamiento del ácido, con riesgos para la seguridad del proceso.
-- Operación cercana o fuera de límites de diseño.
-- Mantenimiento reactivo y aumento de costos operacionales.
-- Limpiezas químicas mal temporizadas (anticipadas o tardías).
-- Pérdida de eficiencia térmica y disponibilidad de planta.
-- Mayor probabilidad de paros no programados.
+- Incremento de temperatura del ácido, con riesgo para la seguridad del proceso.
+- Operación fuera de condiciones óptimas de diseño.
+- Mantención reactiva y mayores costos operacionales.
+- Limpiezas químicas mal temporizadas.
+- Reducción de disponibilidad y eficiencia global de planta.
+- Mayor probabilidad de eventos no programados.
 
 ---
 
-## 2. Solución implementada (`app.py`)
+## 2. Objetivo del sistema
 
-Se desarrolló un **dashboard web en Streamlit (Python)** que permite:
+Desarrollar una herramienta digital que permita:
 
-- Monitorear variables de proceso y operación:
-  - Temperaturas de ácido y agua
-  - Flujos
-  - Conductividad
-  - Carga de producción
-  - Estados operacionales (sopladores, bypass, etc.)
-
-- Calcular KPIs térmicos mediante modelos de ingeniería:
-  - Carga térmica (Q)
-  - Coeficiente global de transferencia (U)
-  - Eficiencia térmica
-  - Factor de ensuciamiento (Rf)
-
-- Construir un **Índice de Criticidad (0–100)** para priorizar lavados químicos.
-
-- Analizar **tendencias y pendientes** solo bajo condición cargada.
-
-- Generar **reportes PDF ejecutivos** automáticos con tablas comparativas, gráficos y recomendaciones priorizadas.
+- Detectar tempranamente la degradación térmica.
+- Priorizar limpiezas químicas en base a criterios objetivos.
+- Reducir riesgos operacionales.
+- Optimizar costos de mantención.
+- Entregar soporte técnico cuantitativo a la toma de decisiones.
 
 ---
 
-## 3. Modelo de ingeniería implementado
+## 3. Solución implementada (`app.py`)
 
-### 3.1 Carga térmica (Q)
+Se desarrolló un **dashboard web en Streamlit (Python)** que:
 
-La carga térmica se calcula a partir del balance energético del agua de enfriamiento:
+- Integra datos históricos de proceso y operación.
+- Aplica modelos de ingeniería térmica en tiempo casi real.
+- Calcula KPIs críticos por ventana de operación válida.
+- Construye un **Índice de Criticidad (0–100)** como principal criterio de decisión.
+- Analiza tendencias solo bajo condición cargada.
+- Genera reportes PDF ejecutivos automáticos.
+
+---
+
+## 4. Modelo de ingeniería aplicado
+
+### 4.1 Carga térmica (Q)
+
+Balance energético del agua de enfriamiento:
 
 \[
 Q = \dot{m} \cdot C_p \cdot (T_{out} - T_{in})
@@ -79,183 +77,162 @@ Donde:
 - \(\Delta T\): salto térmico  
 
 En el sistema:
-- Se reporta **Q promedio (MW)** por ventana de análisis.
-- Se compara con **Q de diseño ajustado**, considerando la condición real del equipo.
+- Q se reporta como **promedio de ventana (MW)**.
+- Se compara contra **Q de diseño ajustado**.
 
 ---
 
-### 3.2 Diferencia de temperatura media logarítmica (LMTD)
+### 4.2 Diferencia de temperatura media logarítmica (LMTD)
 
 \[
 \Delta T_{lm} = \frac{\Delta T_1 - \Delta T_2}{\ln\left(\frac{\Delta T_1}{\Delta T_2}\right)}
 \]
 
-Implementada con validaciones para evitar errores numéricos en condiciones cercanas a equilibrio térmico.
+Implementada con validaciones para evitar inestabilidades numéricas.
 
 ---
 
-### 3.3 Coeficiente global de transferencia (U)
+### 4.3 Coeficiente global de transferencia (U)
 
 \[
 Q = U \cdot A \cdot \Delta T_{lm}
 \]
 
-El sistema recalcula \(U\) considerando:
-
-- Área efectiva disponible
-- Tubos aislados o fuera de servicio
-- Condición real de operación
+- Se recalcula U considerando área efectiva real.
+- Se compara contra U limpio de diseño.
 
 ---
 
-### 3.4 Eficiencia térmica
+### 4.4 Eficiencia térmica
 
 \[
-\eta_{térmica} = \frac{Q_{real}}{Q_{diseño\ ajustado}} \cdot 100
+\eta = \frac{Q_{real}}{Q_{diseño\ ajustado}} \cdot 100
 \]
 
-Esto evita penalizar artificialmente equipos con reducción real de área de transferencia.
+Evita penalizar equipos con tubos aislados o fuera de servicio.
 
 ---
 
-### 3.5 Factor de ensuciamiento (Rf / fouling)
+### 4.5 Factor de ensuciamiento (Rf)
 
-El ensuciamiento se modela como una resistencia térmica adicional:
+El fouling se modela como resistencia térmica adicional:
 
-- Unidad base: \(m^2 \cdot K / W\)
-- Visualización escalada para análisis operacional
+- Unidad base: \(m^2K/W\)
+- Visualización escalada para análisis operacional.
 
-El sistema utiliza un enfoque robusto:
-
-- Método directo vía resistencias térmicas
-- Método indirecto vía pérdida de eficiencia
-- Suavizado temporal (media móvil)
+Se utiliza un enfoque robusto:
+- Método directo vía resistencias térmicas.
+- Método indirecto vía pérdida de eficiencia.
+- Suavizado mediante medias móviles.
 
 ---
 
-## 4. Índice de criticidad operacional
+## 5. Condición de operación válida
 
-Se define un **índice adimensional entre 0 y 100**, compuesto por:
+El análisis se realiza **solo cuando el equipo está cargado**, definido por:
 
-| Componente            | Peso |
-|----------------------|------|
-| Temperatura ácido    | 30%  |
-| Fouling (Rf)         | 35%  |
-| Eficiencia térmica   | 25%  |
-| Días desde lavado    | 10%  |
+- Flujo de agua ≥ % mínimo de diseño.
+- Salto térmico ácido positivo.
+- Temperaturas dentro de rangos físicos.
+- Velocidad de soplador sobre umbral.
 
-Clasificación:
+Esto evita falsos diagnósticos en períodos de baja carga.
+
+---
+
+## 6. Índice de criticidad operacional
+
+El **Índice de Criticidad (0–100)** es el criterio principal para recomendar limpieza química.
+
+### Componentes y ponderación
+
+| Variable | Peso |
+|--------|------|
+| Temperatura ácido salida | 30% |
+| Fouling (Rf) | 35% |
+| Eficiencia térmica | 25% |
+| Días desde último lavado | 10% |
+
+### Clasificación
 
 - **0–30:** Baja 🟢  
 - **30–60:** Media 🟡  
 - **60–80:** Alta 🟠  
-- **80–100:** Crítica 🔴  
-
-Este índice es el **criterio principal** para recomendar limpieza química.
+- **≥80:** Crítica 🔴  
 
 ---
 
-## 5. Tendencias y análisis bajo condición cargada
+## 7. Tendencias y pendientes
 
-El sistema calcula pendientes solo cuando el equipo se encuentra **realmente cargado**, definido por:
+El sistema calcula pendientes solo bajo condición cargada:
 
-- Carga térmica sobre umbral mínimo
-- Flujo de agua válido
-- Operación estable del sistema
+- Pendiente de Rf (ensuciamiento).
+- Pendiente de temperatura de salida.
 
-Ejemplos:
-- Pendiente de Rf \([m^2K/W \cdot día]\)
-- Pendiente de temperatura de salida \([°C/día]\)
-
-Esto evita falsas alarmas durante períodos de baja carga.
+Además, estima **días a condición crítica** cuando la tendencia es positiva y estable.
 
 ---
 
-## 6. Reporte PDF ejecutivo
+## 8. Reporte PDF ejecutivo
 
-El sistema genera automáticamente un **PDF profesional**, que incluye:
+El sistema genera automáticamente un PDF que incluye:
 
-- Resumen ejecutivo comparativo (TS / TAI / TAF)
-- Tabla de KPIs principales
-- Índice de criticidad y recomendación priorizada
-- Gráficos térmicos y de fouling
-- Historial de lavados en línea de tiempo
-
----
-
-## 7. Justificación económica del proyecto
-
-### 7.1 Enfoque del análisis económico
-
-Este proyecto corresponde a una **iniciativa sin CAPEX**, desarrollada internamente utilizando:
-
-- Datos existentes
-- Conocimiento técnico del proceso
-- Herramientas open-source
-
-El análisis económico se centra en **ahorros OPEX** y **evitación de pérdidas operacionales**.
+- Resumen ejecutivo comparativo (TS / TAI / TAF).
+- Tabla consolidada de KPIs.
+- Índice de criticidad promedio.
+- Recomendación priorizada.
+- Gráficos térmicos y de fouling.
+- Historial de lavados en línea de tiempo.
 
 ---
 
-### 7.2 Costos evitados por lavados químicos no óptimos
+## 9. Justificación económica
 
-Cada lavado químico implica:
+### 9.1 Enfoque
 
-- Insumos
-- Mano de obra
-- Pérdida de disponibilidad
-- Riesgos post-intervención
+Proyecto desarrollado **sin CAPEX**, utilizando:
 
-El sistema permite optimizar la frecuencia, evitando lavados innecesarios o tardíos.
-
----
-
-### 7.3 Costos evitados por eventos críticos
-
-La detección temprana de degradación térmica reduce la probabilidad de:
-
-- Restricciones de carga
-- Intervenciones no planificadas
-- Eventos de sobretemperatura
-
-Estos costos evitados representan un beneficio económico significativo.
+- Datos existentes.
+- Infraestructura disponible.
+- Software open-source.
+- Desarrollo interno.
 
 ---
 
-### 7.4 Optimización energética
+### 9.2 Beneficios económicos
 
-Mantener los enfriadores en condición óptima implica:
-
-- Menor consumo energético específico
-- Operación más estable
-- Menor estrés térmico del sistema
+- Reducción de limpiezas químicas innecesarias.
+- Prevención de eventos críticos.
+- Menor mantención reactiva.
+- Mayor disponibilidad de planta.
+- Optimización energética indirecta.
 
 ---
 
-### 7.5 Costos de implementación
+### 9.3 Costos de implementación
 
-| Concepto                    | Costo |
-|----------------------------|-------|
-| Desarrollo del sistema     | 0 USD |
-| Licencias de software      | 0 USD |
-| Infraestructura adicional | 0 USD |
-| Sensores adicionales      | 0 USD |
+| Concepto | Costo |
+|-------|------|
+| Desarrollo | 0 USD |
+| Licencias | 0 USD |
+| Infraestructura | 0 USD |
+| Instrumentación | 0 USD |
 
 **CAPEX total:** **0 USD**
 
 ---
 
-### 7.6 Retorno de la inversión (ROI)
+### 9.4 Retorno de la inversión
 
 \[
 ROI = \frac{Beneficios}{Inversión} \rightarrow \infty
 \]
 
-El sistema genera valor económico desde el primer uso.
+El sistema genera valor desde el primer uso.
 
 ---
 
-## 8. Arquitectura del repositorio
+## 10. Arquitectura del repositorio
 
 ```text
 ENF_AC_DCH/
@@ -266,15 +243,14 @@ ENF_AC_DCH/
 ├── Manual_Usuario_Dashboard_v5.md
 ├── Analisis_Economico_ROI_v5.md
 └── README.md
-
+```
 ---
+## 11. Instalación y ejecución
 
-## 7) Instalación y ejecución
-
-### 7.1 Requisitos
+### 11.1 Requisitos
 - Python 3.9+ recomendado
 
-### 7.2 Instalar dependencias
+### 11.2 Instalar dependencias
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
