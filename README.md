@@ -205,14 +205,16 @@ Proyecto de **optimización operacional sin CAPEX**, desarrollado internamente.
 
 ```text
 ENF_AC_DCH/
-├── app.py
-├── acid_coolers_CAP3_synthetic_2years.csv
-├── chemical_washes_CAP3.csv
-├── Documentacion_Tecnica_v5.md
-├── Manual_Usuario_Dashboard_v5.md
-├── Analisis_Economico_ROI_v5.md
-└── README.md
+├── app.py                                   # Aplicación principal Streamlit
+├── acid_coolers_CAP3_synthetic_2years.csv   # Datos históricos de operación (ejemplo / dataset sintético)
+├── chemical_washes_CAP3.csv                 # Historial de lavados químicos
+├── Documentacion_Tecnica_v5.md              # Documentación técnica del modelo y fundamentos de ingeniería
+├── Manual_Usuario_Dashboard_v5.md           # Manual de uso del dashboard y guía operativa
+├── Analisis_Economico_ROI_v5.md             # Justificación económica y análisis de beneficios (ROI)
+├── requirements.txt                         # Dependencias del proyecto
+└── README.md                                # Documentación general del proyecto
 ```
+
 ---
 ## 10. Instalación y ejecución
 
