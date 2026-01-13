@@ -1,0 +1,17 @@
+# Core
+streamlit>=1.29.0
+pandas>=1.5.3
+numpy>=1.23.0
+
+# Visualización
+plotly>=5.18.0
+matplotlib>=3.7.0
+
+# Machine Learning
+scikit-learn>=1.3.0
+
+# Reportes PDF
+reportlab>=4.0.0
+
+# Utilidades científicas (dependencias indirectas críticas)
+scipy>=1.10.0
