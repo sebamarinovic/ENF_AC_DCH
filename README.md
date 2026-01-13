@@ -1,9 +1,6 @@
 # Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3
-author: "Sebastián Marinovic Leiva"
----
 
-## Contexto del proyecto
-
+**Autor:** Sebastián Marinovic Leiva  
 **División:** Chuquicamata – Codelco  
 **Gerencia:** Fundición  
 **Superintendencia:** Planta de Ácido y Oxígeno  
@@ -66,11 +63,7 @@ Donde:
 - **Cp**: calor específico del agua [J/kg·K]  
 - **T_out**, **T_in**: temperatura de salida y entrada del agua [°C]  
 
-**Implementación en el sistema (`app.py`):**
-- `Q_water_W = m_dot_water * Cp_water * (T_w_out - T_w_in)`
-- `Q_used_W = min(Q_water_W, Q_acid_est)`
-
-En el dashboard:
+En el sistema:
 - Q se reporta como **promedio de ventana (MW)**  
 - Se compara contra **Q de diseño ajustado** para evaluar sobrecarga térmica
 
@@ -78,47 +71,33 @@ En el dashboard:
 
 ### 4.2 Diferencia de temperatura media logarítmica (LMTD)
 
-La LMTD se calcula como:
-
 **LMTD = (ΔT₁ − ΔT₂) / ln(ΔT₁ / ΔT₂)**
 
-Donde:
-- **ΔT₁ = T_hot_in − T_cold_out**
-- **ΔT₂ = T_hot_out − T_cold_in**
-
-**Implementación robusta en el sistema:**
-- Validación de ΔT > 0
-- Manejo de casos ΔT₁ ≈ ΔT₂ para evitar inestabilidad numérica
-- Función dedicada: `safe_lmtd()`
+Cálculo robusto con:
+- Validación de ΔT positivos
+- Manejo de casos cercanos para evitar inestabilidad numérica
 
 ---
 
 ### 4.3 Coeficiente global de transferencia de calor (U)
 
-El coeficiente global se obtiene desde:
-
 **U = Q / (A · LMTD)**
 
-Donde:
-- **A**: área efectiva de intercambio térmico [m²]
-
 En el sistema:
-- Se calcula **U real instantáneo**
-- Se compara contra **U limpio de diseño**
-- Se reporta **U promedio** y **% respecto a condición limpia**
+- Se calcula U real promedio
+- Se compara con condición limpia
+- Se expresa como % de desempeño térmico
 
 ---
 
-### 4.4 Factor de ensuciamiento (Rf – Fouling)
-
-El factor de ensuciamiento se estima a partir de resistencias térmicas:
+### 4.4 Factor de ensuciamiento (Rf)
 
 **Rf = (1 / U_real) − (1 / U_limpio)**
 
-Características del cálculo:
+Características:
 - Filtrado por condición operacional válida
-- Escalado a unidades visibles (**×10⁻⁴ m²·K/W**)
-- Suavizado mediante media móvil para reducir ruido
+- Escalado a unidades visibles (×10⁻⁴ m²·K/W)
+- Suavizado para reducción de ruido
 
 ---
 
@@ -126,18 +105,16 @@ Características del cálculo:
 
 Índice compuesto para priorización operacional:
 
-**Criticidad = 100 · (  
-0.30 · Temperatura +  
-0.35 · Fouling +  
-0.25 · Eficiencia +  
-0.10 · Días sin lavado  
-)**
+- Temperatura: 30%
+- Fouling: 35%
+- Eficiencia térmica: 25%
+- Días sin lavado: 10%
 
 Clasificación:
-- **0–30**: Baja 🟢  
-- **30–60**: Media 🟡  
-- **60–80**: Alta 🟠  
-- **80–100**: Crítica 🔴
+- 0–30: Baja 🟢  
+- 30–60: Media 🟡  
+- 60–80: Alta 🟠  
+- 80–100: Crítica 🔴
 
 ---
 
@@ -145,36 +122,42 @@ Clasificación:
 
 El análisis se realiza **solo cuando el equipo está cargado**, definido por:
 
-- Flujo de agua ≥ % mínimo de diseño.
+- Flujo de agua ≥ umbral mínimo de diseño.
 - Salto térmico ácido positivo.
 - Temperaturas dentro de rangos físicos.
-- Velocidad de soplador sobre umbral.
+- Velocidad de soplador sobre umbral operacional.
 
-Esto evita falsos diagnósticos en períodos de baja carga.
+Esto evita diagnósticos erróneos en períodos de baja carga.
 
 ---
 
 ## 6. Tendencias y pendientes
 
-El sistema calcula pendientes solo bajo condición cargada:
+Se calculan pendientes solo bajo condición cargada:
 
 - Pendiente de Rf (ensuciamiento).
 - Pendiente de temperatura de salida.
 
-Además, estima **días a condición crítica** cuando la tendencia es positiva y estable.
+Además, se estima **días a condición crítica** cuando la tendencia es positiva y estable.
 
 ---
 
-## 7. Reporte PDF ejecutivo
+## 7. Machine Learning supervisado aplicado al sistema
 
-El sistema genera automáticamente un PDF que incluye:
+El Machine Learning se utiliza como **apoyo analítico**, no como decisor principal.
 
-- Resumen ejecutivo comparativo (TS / TAI / TAF).
-- Tabla consolidada de KPIs.
-- Índice de criticidad promedio.
-- Recomendación priorizada.
-- Gráficos térmicos y de fouling.
-- Historial de lavados en línea de tiempo.
+- Tipo: aprendizaje supervisado.
+- Modelos: Random Forest y Gradient Boosting.
+- Objetivo: anticipar tendencias y escenarios críticos.
+
+El ML:
+- Proyecta deterioro térmico
+- Estima días a condición crítica
+- Refuerza la priorización basada en criticidad
+
+Si no existe data suficiente:
+- El ML se desactiva automáticamente
+- El sistema continúa operando solo con ingeniería y reglas
 
 ---
 
@@ -182,131 +165,40 @@ El sistema genera automáticamente un PDF que incluye:
 
 ### 8.1 Enfoque económico
 
-El sistema de monitoreo predictivo de enfriadores CAP-3 corresponde a una **iniciativa de optimización operacional sin inversión de capital (CAPEX = 0)**, desarrollada internamente utilizando:
-
-- Datos históricos existentes de proceso y mantenimiento
-- Infraestructura TI disponible en la División
-- Herramientas de software open-source (Python, Streamlit)
-- Conocimiento técnico del proceso (desarrollo interno)
-
-Por esta razón, el análisis económico se enfoca en **ahorros operacionales (OPEX evitado)** y **prevención de pérdidas**, más que en retorno por inversión tradicional.
+Proyecto de **optimización operacional sin CAPEX**, desarrollado internamente.
 
 ---
 
 ### 8.2 Costos de implementación
 
-El proyecto no requiere inversión adicional.
-
 | Concepto | Costo |
 |--------|-------|
-| Desarrollo del sistema | 0 USD |
-| Licencias de software | 0 USD |
-| Infraestructura TI | 0 USD |
-| Instrumentación adicional | 0 USD |
+| Desarrollo | 0 USD |
+| Licencias | 0 USD |
+| Infraestructura | 0 USD |
+| Instrumentación | 0 USD |
 
-**CAPEX total:** **0 USD**  
-**OPEX anual:** **0 USD**
-
-Todo el desarrollo y soporte se realiza con recursos internos ya disponibles.
+**CAPEX total:** 0 USD
 
 ---
 
-### 8.3 Fuentes principales de ahorro económico
+### 8.3 Beneficios económicos
 
-El sistema genera beneficios económicos a través de múltiples mecanismos independientes:
+- Reducción de paros no programados
+- Optimización de limpiezas químicas
+- Extensión de vida útil de equipos
+- Reducción de consumo energético
+- Mejora de confiabilidad operacional
 
-#### 1. Reducción de paros no programados
-- Paros asociados a sobrecalentamiento de ácido y pérdida de eficiencia térmica.
-- Línea base histórica: ~8–12 eventos por año.
-- Reducción estimada: **80–90%** mediante detección temprana y limpieza oportuna.
-- **Ahorro anual estimado:** **USD 250,000 – 450,000**
-
-#### 2. Optimización de limpiezas químicas
-- Evita limpiezas prematuras o innecesarias.
-- Permite limpiar solo cuando el fouling real lo justifica.
-- Reducción de eventos de limpieza: 2–6 por año.
-- **Ahorro anual estimado:** **USD 12,000 – 20,000**
-
-#### 3. Extensión de vida útil de los enfriadores
-- Menor estrés térmico y menor degradación de tubos.
-- Extensión estimada de vida útil: **20–25%**.
-- Diferimiento de reemplazos mayores.
-- **Beneficio económico equivalente anualizado:** **USD 40,000 – 60,000**
-
-#### 4. Reducción de consumo energético
-- Enfriadores limpios operan con menor demanda de bombeo y ventilación.
-- Reducción estimada de consumo energético: **3–8%**.
-- **Ahorro anual estimado:** **USD 50,000 – 80,000**
-
-#### 5. Mejora de calidad de producto
-- Control de temperatura de salida del ácido.
-- Menor probabilidad de desviaciones de concentración y pureza.
-- Reducción de reprocesos y pérdidas de lote.
-- **Ahorro anual estimado:** **USD 35,000 – 90,000**
-
-#### 6. Mejora de confiabilidad operacional
-- Mejor planificación de mantenimiento.
-- Menor carga reactiva sobre operadores.
-- Reducción de horas extraordinarias.
-- **Beneficio anual conservador:** **USD 40,000 – 60,000**
+**Beneficio anual estimado:** ≈ **600,000 USD**
 
 ---
 
-### 8.4 Resumen de beneficios anuales
+### 8.4 Retorno de la inversión
 
-| Fuente de ahorro | Ahorro anual estimado (USD) |
-|----------------|-----------------------------|
-| Paros no programados evitados | 358,000 |
-| Optimización limpiezas químicas | 16,000 |
-| Extensión vida útil equipos | 50,000 |
-| Reducción consumo energético | 64,000 |
-| Mejjora calidad producto | 62,500 |
-| Confiabilidad operacional | 50,000 |
-| **TOTAL BENEFICIOS ANUALES** | **≈ 600,000 USD** |
+- ROI: Infinito  
+- Payback: Inmediato  
 
-> Se utiliza un enfoque **conservador** en las estimaciones.
-
----
-
-### 8.5 Retorno de la inversión (ROI)
-
-Dado que:
-- La inversión inicial es **0 USD**
-- Los beneficios son positivos desde el primer uso
-El retorno económico del proyecto es:
-- **ROI:** Infinito  
-- **Payback:** Inmediato (0 meses)  
-Cualquier ahorro generado representa **ganancia neta directa para la operación**.
-
----
-### 8.6 Valor económico a largo plazo
-
-En un horizonte de 10 años, considerando beneficios constantes:
-- **Beneficio acumulado estimado:** **USD 6,000,000**
-- **Valor presente neto (VPN):** altamente positivo
-- **Riesgo financiero:** bajo (beneficios distribuidos en múltiples fuentes)
-El proyecto mantiene valor incluso bajo escenarios conservadores (−20% beneficios).
-
----
-### 8.7 Beneficios estratégicos adicionales (no monetizados)
-
-- Herramienta objetiva para toma de decisiones técnicas.
-- Base para escalamiento a otras plantas de ácido.
-- Reducción de dependencia de proveedores externos.
-- Desarrollo de capacidades digitales internas.
-- Transferencia tecnológica dentro de la División.
-- Alineación con estrategia de excelencia operacional y digitalización Codelco.
-  
----
-### 8.8 Conclusión económica
-
-El sistema de monitoreo predictivo de enfriadores CAP-3 presenta una **justificación económica excepcional**, caracterizada por:
-- Cero inversión de capital.
-- Ahorros operacionales recurrentes.
-- Prevención de pérdidas críticas.
-- Retorno inmediato.
-- Alto potencial de escalamiento.
-  
 ---
 
 ## 9. Arquitectura del repositorio
