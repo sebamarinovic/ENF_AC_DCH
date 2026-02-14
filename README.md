@@ -1,229 +1,161 @@
+
+Readme · MD
+Copiar
+
 # Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3
 
-**Autor:** Sebastián Marinovic Leiva  
-**División:** Chuquicamata – Codelco  
-**Gerencia:** Fundición  
-**Superintendencia:** Planta de Ácido y Oxígeno  
+Sistema de monitoreo predictivo para enfriadores de ácido sulfúrico en **CAP-3 (Chuquicamata – Codelco)**, basado en fundamentos de transferencia de calor, análisis de ensuciamiento (fouling), criticidad operativa y modelos de Machine Learning para apoyar decisiones de operación y mantención.
 
-**Iniciativa:** Concurso *“Me pongo la camiseta por Chuqui”* – Sindicato 3  
-**Tipo:** Innovación operacional y confiabilidad de activos  
+**Enfriadores monitoreados (CAP-3):**
 
-Este repositorio documenta el desarrollo e implementación de un **sistema digital de monitoreo predictivo** para los enfriadores de ácido sulfúrico de la planta CAP-3, integrando modelos de ingeniería térmica, análisis de ensuciamiento y criterios objetivos de criticidad operacional.
+- Secado
+- Absorción Intermedia
+- Absorción Final
 
 ---
 
-## 1. Problema operacional
+## 🚀 Objetivo
 
-Los enfriadores de ácido sulfúrico CAP-3 (Torre de Secado, Torre de Absorción Intermedia y Torre de Absorción Final) son activos críticos del circuito de absorción. Su degradación térmica por ensuciamiento (*fouling*) y variaciones en la calidad del agua de enfriamiento generan:
+Detectar degradación térmica, ensuciamiento y condiciones anómalas en los enfriadores CAP-3, entregando:
 
-- Incremento de temperatura del ácido, con riesgo para la seguridad del proceso.
-- Operación fuera de condiciones óptimas de diseño.
-- Mantención reactiva y mayores costos operacionales.
-- Limpiezas químicas mal temporizadas.
-- Reducción de disponibilidad y eficiencia global de planta.
-- Mayor probabilidad de eventos no programados.
-
----
-
-## 2. Objetivo del sistema
-
-Desarrollar una herramienta digital que permita:
-
-- Detectar tempranamente la degradación térmica.
-- Priorizar limpiezas químicas en base a criterios objetivos.
-- Reducir riesgos operacionales.
-- Optimizar costos de mantención.
-- Entregar soporte técnico cuantitativo a la toma de decisiones.
+- Indicadores térmicos (eficiencia y capacidad)
+- Factor de fouling robusto (método dual)
+- Índice de criticidad
+- Predicciones y alertas con ML
+- Recomendaciones operacionales y de mantención
 
 ---
 
-## 3. Solución implementada (`app.py`)
+## ✨ Funcionalidades principales
 
-Se desarrolló un **dashboard web en Streamlit (Python)** que:
+### 1) Eficiencia térmica (η)
 
-- Integra datos históricos de proceso y operación.
-- Aplica modelos de ingeniería térmica en tiempo casi real.
-- Calcula KPIs críticos por ventana de operación válida.
-- Construye un **Índice de Criticidad (0–100)** como principal criterio de decisión.
-- Analiza tendencias solo bajo condición cargada.
-- Genera reportes PDF ejecutivos automáticos.
+- Cálculo de desempeño térmico respecto a diseño.
+- Interpreta degradación por ensuciamiento vs. restricciones operacionales.
 
----
+### 2) Factor de Ensuciamiento (Fouling) – Método Dual Robusto
 
-## 4. Modelo de ingeniería aplicado
+Combina:
 
-### 4.1 Carga térmica (Q)
+1. **Método directo** por coeficiente global U
+2. **Método indirecto** por pérdida de eficiencia
 
-La carga térmica se calcula mediante el balance energético del agua de enfriamiento:
+Luego pondera, suaviza (media móvil) y escala para visualización.
 
-**Q = ṁ · Cp · (T_out − T_in)**
+### 3) ⭐ Gestión de Tubos Aislados (feature clave)
 
-Donde:
-- **ṁ**: flujo másico de agua [kg/s]  
-- **Cp**: calor específico del agua [J/kg·K]  
-- **T_out**, **T_in**: temperatura de salida y entrada del agua [°C]  
+Cuando hay tubos tapados/aislados por fugas:
 
-En el sistema:
-- Q se reporta como **promedio de ventana (MW)**  
-- Se compara contra **Q de diseño ajustado** para evaluar sobrecarga térmica
+- Ajusta automáticamente el área efectiva de transferencia.
+- Ajusta el `Q_design` y la línea base de eficiencia.
+- Evita falsos diagnósticos (p. ej., eficiencia "baja" por pérdida de área y no por fouling).
 
----
+### 4) Índice de Criticidad
 
-### 4.2 Diferencia de temperatura media logarítmica (LMTD)
+Score compuesto (ponderado) para priorización de acciones (operación/mantención).
 
-**LMTD = (ΔT₁ − ΔT₂) / ln(ΔT₁ / ΔT₂)**
+### 5) Machine Learning
 
-Cálculo robusto con:
-- Validación de ΔT positivos
-- Manejo de casos cercanos para evitar inestabilidad numérica
+- **RandomForestRegressor** para predicción (ej. T salida ácido) usando variables de proceso.
+- **Isolation Forest** para detección de anomalías operacionales (eventos súbitos, combinaciones inusuales, etc.).
+- Proyección de "días hasta mantenimiento" por tendencia operacional (cuando aplique).
 
 ---
 
-### 4.3 Coeficiente global de transferencia de calor (U)
+## 🧱 Arquitectura del repositorio
 
-**U = Q / (A · LMTD)**
-
-En el sistema:
-- Se calcula U real promedio
-- Se compara con condición limpia
-- Se expresa como % de desempeño térmico
-
----
-
-### 4.4 Factor de ensuciamiento (Rf)
-
-**Rf = (1 / U_real) − (1 / U_limpio)**
-
-Características:
-- Filtrado por condición operacional válida
-- Escalado a unidades visibles (×10⁻⁴ m²·K/W)
-- Suavizado para reducción de ruido
-
----
-
-### 4.5 Índice de criticidad (0–100)
-
-Índice compuesto para priorización operacional:
-
-- Temperatura: 30%
-- Fouling: 35%
-- Eficiencia térmica: 25%
-- Días sin lavado: 10%
-
-Clasificación:
-- 0–30: Baja 🟢  
-- 30–60: Media 🟡  
-- 60–80: Alta 🟠  
-- 80–100: Crítica 🔴
-
----
-
-## 5. Condición de operación válida
-
-El análisis se realiza **solo cuando el equipo está cargado**, definido por:
-
-- Flujo de agua ≥ umbral mínimo de diseño.
-- Salto térmico ácido positivo.
-- Temperaturas dentro de rangos físicos.
-- Velocidad de soplador sobre umbral operacional.
-
-Esto evita diagnósticos erróneos en períodos de baja carga.
-
----
-
-## 6. Tendencias y pendientes
-
-Se calculan pendientes solo bajo condición cargada:
-
-- Pendiente de Rf (ensuciamiento).
-- Pendiente de temperatura de salida.
-
-Además, se estima **días a condición crítica** cuando la tendencia es positiva y estable.
-
----
-
-## 7. Machine Learning supervisado aplicado al sistema
-
-El Machine Learning se utiliza como **apoyo analítico**, no como decisor principal.
-
-- Tipo: aprendizaje supervisado.
-- Modelos: Random Forest y Gradient Boosting.
-- Objetivo: anticipar tendencias y escenarios críticos.
-
-El ML:
-- Proyecta deterioro térmico
-- Estima días a condición crítica
-- Refuerza la priorización basada en criticidad
-
-Si no existe data suficiente:
-- El ML se desactiva automáticamente
-- El sistema continúa operando solo con ingeniería y reglas
-
----
-
-## 8. Justificación económica del proyecto
-
-### 8.1 Enfoque económico
-
-Proyecto de **optimización operacional sin CAPEX**, desarrollado internamente.
-
----
-
-### 8.2 Costos de implementación
-
-| Concepto | Costo |
-|--------|-------|
-| Desarrollo | 0 USD |
-| Licencias | 0 USD |
-| Infraestructura | 0 USD |
-| Instrumentación | 0 USD |
-
-**CAPEX total:** 0 USD
-
----
-
-### 8.3 Beneficios económicos
-
-- Reducción de paros no programados
-- Optimización de limpiezas químicas
-- Extensión de vida útil de equipos
-- Reducción de consumo energético
-- Mejora de confiabilidad operacional
-
-**Beneficio anual estimado:** ≈ **600,000 USD**
-
----
-
-### 8.4 Retorno de la inversión
-
-- ROI: Infinito  
-- Payback: Inmediato  
-
----
-
-## 9. Arquitectura del repositorio
-
-```text
-ENF_AC_DCH/
-├── app.py                                   # Aplicación principal Streamlit
-├── acid_coolers_CAP3_synthetic_2years.csv   # Datos históricos de operación (ejemplo / dataset sintético)
-├── chemical_washes_CAP3.csv                 # Historial de lavados químicos
-├── Documentacion_Tecnica_v5.md              # Documentación técnica del modelo y fundamentos de ingeniería
-├── Manual_Usuario_Dashboard_v5.md           # Manual de uso del dashboard y guía operativa
-├── Analisis_Economico_ROI_v5.md             # Justificación económica y análisis de beneficios (ROI)
-├── requirements.txt                         # Dependencias del proyecto
-└── README.md                                # Documentación general del proyecto
+```
+CAP3_Coolers_Monitor/
+├── app.py
+├── requirements.txt
+├── data/
+│   ├── acid_coolers_CAP3_synthetic_2years.csv
+│   └── chemical_washes_CAP3.csv
+├── docs/
+│   ├── Documentacion_Tecnica_CAP3.pdf
+│   ├── Manual_Usuario.pdf
+│   └── Analisis_Economico_VAN.pdf
+└── README.md
 ```
 
 ---
-## 10. Instalación y ejecución
 
-### 10.1 Requisitos
-- Python 3.9+ recomendado
+## 🛠️ Requisitos
 
-### 10.2 Instalar dependencias
+- Python 3.9+
+- Streamlit
+- Numpy / Pandas
+- Plotly / Matplotlib (si aplica)
+- Scikit-learn
+
+---
+
+## ⚙️ Instalación
+
 ```bash
 pip install -r requirements.txt
+```
+
+---
+
+## ▶️ Ejecución
+
+```bash
 streamlit run app.py
 ```
 
+---
+
+## 📌 Uso (flujo típico)
+
+1. Cargar dataset histórico (CSV o fuente equivalente).
+2. Seleccionar enfriador y rango de fechas.
+3. Revisar:
+   - Métricas térmicas y tendencia
+   - Fouling (dual robusto)
+   - Criticidad y clasificación
+   - Predicción / anomalías (ML)
+4. Registrar/ajustar tubos aislados (si aplica) para recalcular automáticamente baseline y capacidad.
+
+---
+
+## ✅ Validación y calibración (recomendado)
+
+### Validar eficiencia contra escenarios
+
+| Escenario | Resultado esperado |
+|---|---|
+| Equipo limpio | ≈ 100% |
+| Equipo sucio | < 100% |
+
+### Validación de tubos aislados
+
+| Condición | Resultado esperado |
+|---|---|
+| 0 tubos aislados | Baseline normal |
+| N tubos aislados | Capacidad reducida coherente |
+| Todos los tubos aislados | Alerta / condición inválida |
+
+### Calibración con datos reales
+
+- Comparar predicciones vs mediciones durante 1 mes.
+- Ajustar sensibilidad por equipo si corresponde.
+- Reentrenar modelos periódicamente con datos nuevos.
+
+---
+
+## 🧩 Roadmap (ideas)
+
+- [ ] Integración con SAP PM (OT automática)
+- [ ] Alertas por email / SMS / Telegram
+- [ ] Persistencia de estado de tubos aislados en BD
+- [ ] Dashboard móvil / Edge computing
+
+---
+
+## 👤 Autor
+
+**Sebastián Marinovic Leiva**
+Chuquicamata – Codelco (Chile)
+
+📧 Contacto: [sebamarinovic.leiva@gmail.com](mailto:sebamarinovic.leiva@gmail.com)
