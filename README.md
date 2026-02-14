@@ -1,7 +1,3 @@
-
-Readme · MD
-Copiar
-
 # Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3
 
 Sistema de monitoreo predictivo para enfriadores de ácido sulfúrico en **CAP-3 (Chuquicamata – Codelco)**, basado en fundamentos de transferencia de calor, análisis de ensuciamiento (fouling), criticidad operativa y modelos de Machine Learning para apoyar decisiones de operación y mantención.
