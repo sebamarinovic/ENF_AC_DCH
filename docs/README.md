@@ -541,3 +541,9 @@ Este proyecto ha sido posible gracias a:
 *Última actualización: 15 de Febrero, 2026*  
 *Versión: 6.0*  
 *Autor: Sebastián Marinovic Leiva - División Chuquicamata, Codelco Chile*
+
+---
+
+*Última actualización: 15 de Febrero, 2026*  
+*Versión: 6.0*  
+*Autor: Sebastián Marinovic Leiva - División Chuquicamata, Codelco Chile*
