@@ -330,6 +330,7 @@ streamlit run app.py
 ## 🧩 Roadmap (ideas futuras)
 
 - [ ] Integración con SAP PM (OT automática)
+- [ ] Integreacion de instrumentación crítica para mehorar resulta (termocuplas entrasa/salia aguas, presiones difrenciales, etre otros)
 - [ ] Alertas por email / SMS / Telegram
 - [ ] Persistencia de estado de tubos aislados en BD
 - [ ] Dashboard móvil / Edge computing
