@@ -1,13 +1,13 @@
 # ❄️ Sistema de Monitoreo Predictivo – Enfriadores de Ácido Sulfúrico CAP-3
 
-> **Versión:** 4.0 (Con Gestión de Tubos Aislados)
-> **Autor:** Sebastián Marinovic Leiva
-> **División:** Chuquicamata – Codelco (Chile)
+> **Versión:** 4.0 (Con Gestión de Tubos Aislados)  
+> **Autor:** Sebastián Marinovic Leiva  
+> **División:** Chuquicamata – Codelco (Chile)  
 > **Fecha:** Octubre 2025 – Febrero 2026
 
 Sistema de monitoreo predictivo para enfriadores de ácido sulfúrico en **CAP-3 (Planta de Ácido Sulfúrico, Chuquicamata – Codelco)**, basado en fundamentos de transferencia de calor, análisis de ensuciamiento (fouling), criticidad operativa y modelos de Machine Learning para apoyar decisiones de operación y mantención.
 
-**Enfriadores monitoreados (CAP-3):**
+## Enfriadores monitoreados (CAP-3)
 
 - **Secado** – 632 tubos ZeCor-Z
 - **Absorción Intermedia** – 883 tubos ZeCor-Z
@@ -34,7 +34,7 @@ Detectar degradación térmica, ensuciamiento y condiciones anómalas en los enf
 
 Los enfriadores de ácido sulfúrico en CAP-3 son intercambiadores de calor de carcasa y tubos (*shell & tube*), donde el ácido sulfúrico circula por el lado carcasa y el agua de enfriamiento por el lado tubos. La transferencia de calor se rige por:
 
-```
+```text
 Q = ṁ × Cp × ΔT = U × A × ΔTLM
 ```
 
@@ -54,7 +54,7 @@ Donde:
 
 El coeficiente global depende de las resistencias térmicas en serie:
 
-```
+```text
 1/U = 1/h_i + 1/h_o + Rf_i + Rf_o + (e/k)
 ```
 
@@ -64,13 +64,13 @@ Donde `h_i` y `h_o` son los coeficientes de convección interno y externo, `Rf_i
 
 El ensuciamiento es la acumulación de depósitos no deseados sobre las superficies de transferencia que genera una resistencia térmica adicional (Müller-Steinhagen, 2000). El factor de ensuciamiento se define como:
 
-```
+```text
 Rf = (1/U_sucio) − (1/U_limpio)   [m²·K/W]
 ```
 
 En enfriadores de ácido sulfúrico, las principales fuentes de fouling incluyen depósitos de sulfatos, corrosión del material de tubos y precipitación de sólidos disueltos.
 
-**Rangos típicos de Rf:**
+#### Rangos típicos de Rf
 
 | Estado | Rf (m²·K/W) |
 |---|---|
@@ -85,7 +85,7 @@ Referencia de validación: **TEMA RCB-7.41** establece valores de referencia de 
 
 La eficiencia térmica mide qué tan bien el enfriador cumple su función respecto al diseño:
 
-```
+```text
 η = (Q_actual / Q_design_ajustado) × 100  [%]
 ```
 
@@ -104,46 +104,50 @@ Donde `Q_actual = dT_acid × F_water` y `Q_design` se ajusta automáticamente po
 
 El sistema implementa un método que combina dos enfoques complementarios en 8 pasos (Müller-Steinhagen, 2000; Perry, 2019):
 
-**Paso 1 – U aproximado:**
-```
+**Paso 1 – U aproximado**
+```text
 offset = 0.05 × ΔT_design
 U_aprox = Q_actual / (ΔT_acid + offset)
 ```
 
-**Paso 2 – Resistencia actual:**
-```
+**Paso 2 – Resistencia actual**
+```text
 R_actual = 1 / (U_aprox + 0.0001)
 ```
 
-**Paso 3 – Resistencia limpia:**
-```
+**Paso 3 – Resistencia limpia**
+```text
 U_limpio = Q_design / (ΔT_design + offset)
 R_limpia = 1 / U_limpio
 ```
 
-**Paso 4 – Fouling por método directo (U):**
-```
+**Paso 4 – Fouling por método directo (U)**
+```text
 F_U = (R_actual − R_limpia) × sensitivity
 ```
 
-Donde `sensitivity` es un factor ajustable por tipo de enfriador: Secado = 1.2, Absorción Intermedia = 1.0, Absorción Final = 1.2.
+Donde `sensitivity` es un factor ajustable por tipo de enfriador:
+- Secado = 1.2
+- Absorción Intermedia = 1.0
+- Absorción Final = 1.2
 
-**Paso 5 – Fouling por método indirecto (eficiencia):**
-```
+**Paso 5 – Fouling por método indirecto (eficiencia)**
+```text
 F_η = (η_baseline − η_actual) / 100 × 0.001
 ```
 
 Donde `η_baseline` es el promedio de las primeras 720 horas (30 días).
 
-**Paso 6 – Combinación ponderada:**
-```
+**Paso 6 – Combinación ponderada**
+```text
 F_total = 0.7 × F_U + 0.3 × F_η
 ```
 
-**Paso 7 – Suavizado:** Media móvil de 12 horas para reducir ruido.
+**Paso 7 – Suavizado**  
+Media móvil de 12 horas para reducir ruido.
 
-**Paso 8 – Escala visible:**
-```
+**Paso 8 – Escala visible**
+```text
 F_display = F_suavizado × 10,000   [×10⁻⁴ m²·K/W]
 ```
 
@@ -156,13 +160,17 @@ F_display = F_suavizado × 10,000   [×10⁻⁴ m²·K/W]
 | 5.00 – 10.00 | Moderado | Limpieza en 30–60 días |
 | > 10.00 | Alto | Limpieza urgente |
 
-**Ventajas del método dual:** (1) Robusto – no depende de una sola medición, (2) Sensible – detecta cambios graduales, (3) Adaptable – factor ajustable por equipo, (4) Filtrado – media móvil elimina falsos positivos.
+**Ventajas del método dual:**  
+1. Robusto – no depende de una sola medición  
+2. Sensible – detecta cambios graduales  
+3. Adaptable – factor ajustable por equipo  
+4. Filtrado – media móvil elimina falsos positivos  
 
 ### 2.6 Índice de criticidad
 
 Score compuesto multifactorial (0–100) con pesos justificados:
 
-```
+```text
 Criticidad = 0.40 × f(T) + 0.30 × f(η) + 0.20 × f(conductividad) + 0.10 × f(fouling)
 ```
 
@@ -173,7 +181,7 @@ Criticidad = 0.40 × f(T) + 0.30 × f(η) + 0.20 × f(conductividad) + 0.10 × f
 | Conductividad | 20% | Indicador de calidad del agua (causa de fouling) |
 | Fouling | 10% | Resultado de los demás factores |
 
-**Clasificación:**
+#### Clasificación
 
 | Rango | Nivel | Acción |
 |---|---|---|
@@ -186,8 +194,9 @@ Criticidad = 0.40 × f(T) + 0.30 × f(η) + 0.20 × f(conductividad) + 0.10 × f
 
 Cuando se detectan tubos rotos o con fugas, se aíslan mecánicamente (se tapan). Esto reduce el área efectiva de transferencia y la capacidad del enfriador. **Hasta ahora, este impacto no se cuantificaba ni se ajustaban los cálculos.**
 
-**Cálculo de área efectiva:**
-```
+#### Cálculo de área efectiva
+
+```text
 A_tubo = π × D × L                          (D = 25.4 mm, L = 6.0 m)
 A_efectiva = A_tubo × (N_total − N_aislados)
 Factor_reducción = (N_total − N_aislados) / N_total
@@ -195,19 +204,19 @@ Q_design_ajustado = Q_design_base × Factor_reducción
 Pérdida_capacidad = (1 − Factor_reducción) × 100  [%]
 ```
 
-**Ejemplo práctico (Absorción Intermedia):**
+#### Ejemplo práctico (Absorción Intermedia)
 
 | Condición | Sin ajuste | Con 100 tubos aislados |
 |---|---|---|
 | Tubos operativos | 883 (100%) | 783 (88.7%) |
 | Q_design (kcal/h) | 31,073 | 27,562 |
-| Eficiencia si Q_actual = 26,500 | 85.3% ⚠️ *parece baja* | **96.1%** ✅ *equipo OK* |
+| Eficiencia si Q_actual = 26,500 | 85.3% ⚠️ parece baja | **96.1%** ✅ equipo OK |
 
 **Beneficio clave:** Diferencia correctamente entre ensuciamiento real y pérdida de área por tubos aislados, evitando falsos diagnósticos y decisiones erróneas de mantenimiento.
 
 ### 2.8 Machine Learning
 
-**Random Forest Regressor** (Susto et al., 2015; Scikit-learn):
+#### Random Forest Regressor (Susto et al., 2015; Scikit-learn)
 
 | Parámetro | Valor |
 |---|---|
@@ -218,13 +227,14 @@ Pérdida_capacidad = (1 − Factor_reducción) × 100  [%]
 | RMSE típico | < 2 °C |
 | R² típico | > 0.95 |
 
-Features: `T_acid_in_C`, `F_water`, `cond_uS_cm`, `FLUJO_CAP3`, `%VELOCIDAD_SOPLADOR`
-Target: `T_acid_out_C`
+**Features:** `T_acid_in_C`, `F_water`, `cond_uS_cm`, `FLUJO_CAP3`, `%VELOCIDAD_SOPLADOR`  
+**Target:** `T_acid_out_C`
 
-**Isolation Forest** para detección de anomalías (contamination = 5%): identifica temperaturas fuera de rango, combinaciones inusuales de parámetros y eventos súbitos no explicados.
+**Isolation Forest** para detección de anomalías (`contamination = 5%`): identifica temperaturas fuera de rango, combinaciones inusuales de parámetros y eventos súbitos no explicados.
 
-**Predicción de días hasta mantenimiento:**
-```
+#### Predicción de días hasta mantenimiento
+
+```text
 tendencia = (T_actual − T_30d_atrás) / 30   [°C/día]
 días_hasta_límite = (T_máx − T_actual) / tendencia
 ```
@@ -259,11 +269,11 @@ El sistema se despliega como un dashboard interactivo en **Streamlit** con 7 mó
 
 | Capa | Implementación |
 |---|---|
-| **Adquisición** | Extracción periódica desde PI System (API/connector) + validación de calidad |
-| **Procesamiento** | Python (pandas/numpy) · feature engineering · cálculo fouling/ΔT · scoring |
-| **Persistencia** | CSV/Parquet local + backup en nube (S3 o equivalente) |
-| **Aplicación** | Streamlit (dashboard interactivo, 7 módulos) |
-| **Alertas** | Reglas + umbrales + salida a correo/Telegram/Teams |
+| Adquisición | Extracción periódica desde PI System (API/connector) + validación de calidad |
+| Procesamiento | Python (pandas/numpy) · feature engineering · cálculo fouling/ΔT · scoring |
+| Persistencia | CSV/Parquet local + backup en nube (S3 o equivalente) |
+| Aplicación | Streamlit (dashboard interactivo, 7 módulos) |
+| Alertas | Reglas + umbrales + salida a correo/Telegram/Teams |
 
 ### Fuentes de datos
 
@@ -274,7 +284,7 @@ El sistema se despliega como un dashboard interactivo en **Streamlit** con 7 mó
 
 ### Variables del modelo
 
-**Variables base del dataset:**
+#### Variables base del dataset
 
 | Variable | Descripción |
 |---|---|
@@ -292,10 +302,28 @@ El sistema se despliega como un dashboard interactivo en **Streamlit** con 7 mó
 
 **Variables derivadas (feature engineering):** ΔT por equipo, medias móviles (rolling 12h), tasas de cambio (dT/dt), indicadores de ensuciamiento, baseline de eficiencia (primeras 720h).
 
+### Mejora prioritaria de datos (instrumentación crítica)
+
+Para aumentar la precisión de los indicadores térmicos, fouling y predicción ML, se prioriza integrar instrumentación crítica adicional desde PI System:
+
+- Termocuplas / RTD de entrada y salida de agua por enfriador
+- Termocuplas / RTD de entrada y salida de ácido por enfriador
+- Presiones diferenciales (ΔP) asociadas a circuitos y equipos
+- Caudales reales (agua/ácido) con mayor resolución temporal
+- Conductividad y calidad de agua (variables causales de fouling)
+- Variables operacionales complementarias (sopladores, carga HF, CPS en servicio, etc.)
+
+#### Impacto esperado de esta integración
+
+- Mejor estimación de `Q`, `U`, `ΔTLM` y fouling real
+- Menor ruido en el score de criticidad
+- Menos falsos positivos en anomalías
+- Mejor desempeño predictivo (Random Forest / modelos futuros)
+
 ### Especificaciones de diseño por enfriador
 
 | Parámetro | Secado | Abs. Intermedia | Abs. Final |
-|---|---|---|---|
+|---|---:|---:|---:|
 | T° entrada diseño (°C) | 75 | 77 | 71 |
 | T° salida diseño (°C) | 65 | 66 | 63 |
 | ΔT diseño (°C) | 10 | 11 | 8 |
@@ -317,15 +345,17 @@ El sistema se despliega como un dashboard interactivo en **Streamlit** con 7 mó
 
 | Fase | Alcance | Plazo | Equipo clave |
 |---|---|---|---|
-| **Fase 1:** Preparación | Recopilación datos, validación tags PI, definición umbrales | 2 semanas | Ing. Procesos + Esp. PI |
-| **Fase 2:** Desarrollo | Implementación módulos, integración PI, testing interno | 4 semanas | Ing. Procesos |
-| **Fase 3:** Piloto | Validación con operadores, ajuste parámetros, calibración ML | 4 semanas | Operadores + Mantención |
-| **Fase 4:** Despliegue | Capacitación formal, documentación, go-live | 2 semanas | Todos |
-| **Total** | | **12 semanas** | |
+| Fase 1: Preparación | Recopilación datos, validación tags PI, definición umbrales | 2 semanas | Ing. Procesos + Esp. PI |
+| Fase 2: Desarrollo | Implementación módulos, integración PI, testing interno | 4 semanas | Ing. Procesos |
+| Fase 3: Piloto | Validación con operadores, ajuste parámetros, calibración ML | 4 semanas | Operadores + Mantención |
+| Fase 4: Despliegue | Capacitación formal, documentación, go-live | 2 semanas | Todos |
+| **Total** |  | **12 semanas** |  |
 
 ---
 
 ## 💰 Análisis Económico (Caso de Negocio)
+
+> **Resumen ejecutivo económico:** Con datos de presupuesto 2026 (valorización de cobre fino y ley 29,89%), el sistema proyecta un beneficio neto anual de ~US$ 657 mil y un VAN de ~US$ 2,49 MM (5 años, 10%), manteniendo CAPEX = 0 y OPEX anual de US$ 1.000.
 
 ### Problema cuantificado
 
@@ -334,11 +364,11 @@ La condición de alta temperatura del ácido / circuito de enfriamiento en CAP-3
 **Fuente:** Base "Factorial Pérdidas Fusión HF" (año 2025, filtro: Unidad=PAS, Falla contiene "Disponibilidad CAP III"):
 
 | Indicador | Valor 2025 |
-|---|---|
+|---|---:|
 | Eventos registrados | 33 |
 | Pérdidas de Fusión asociadas | 6,255.35 ton/año |
-| Duración acumulada | 108.88 h |
-| Tiempo detención acumulado | 179.10 h |
+| Duración acumulada | 132.88 h |
+| Participación sobre pérdidas totales | 2.71% |
 
 ### Costos de la problemática actual
 
@@ -353,7 +383,7 @@ La condición de alta temperatura del ácido / circuito de enfriamiento en CAP-3
 ### Modelo de inversión
 
 | Concepto | Monto (US$) |
-|---|---|
+|---|---:|
 | Desarrollo software (análisis, diseño, programación, testing) | 0 |
 | Licencias software (open source) | 0 |
 | Servidor (infraestructura existente) | 0 |
@@ -362,68 +392,102 @@ La condición de alta temperatura del ácido / circuito de enfriamiento en CAP-3
 | **TOTAL INVERSIÓN (CAPEX)** | **0** |
 | **OPEX anual (nube: almacenaje/respaldos)** | **1,000/año** |
 
-### Escenarios de retorno
+### Escenarios de retorno (referenciales)
 
-**Escenario conservador:**
+#### Escenario conservador
 
 | Concepto | Valor |
-|---|---|
-| Evitar 2 paros no programados | US$ 120,000/año |
-| Optimizar 2 limpiezas químicas | US$ 30,000/año |
-| Extensión vida útil tubos (+20%) | US$ 30,000/año |
-| **Total beneficio anual** | **US$ 180,000/año** |
+|---|---:|
+| Evitar 2 paros no programados | 120,000/año |
+| Optimizar 2 limpiezas químicas | 30,000/año |
+| Extensión vida útil tubos (+20%) | 30,000/año |
+| **Total beneficio anual** | **180,000/año** |
 | **ROI primer año** | **∞ (CAPEX = 0)** |
 | **Payback** | **Inmediato** |
 
-**Escenario optimista:**
+#### Escenario optimista
 
 | Concepto | Valor |
-|---|---|
-| Evitar 3–4 paros no programados | US$ 240,000/año |
-| Optimizar 3 limpiezas químicas | US$ 50,000/año |
-| Extensión vida útil + reducción HH | US$ 50,000/año |
-| **Total beneficio anual** | **US$ 340,000/año** |
+|---|---:|
+| Evitar 3–4 paros no programados | 240,000/año |
+| Optimizar 3 limpiezas químicas | 50,000/año |
+| Extensión vida útil + reducción HH | 50,000/año |
+| **Total beneficio anual** | **340,000/año** |
 | **ROI primer año** | **∞ (CAPEX = 0)** |
 | **Payback** | **Inmediato** |
 
-### Modelo de VAN (vinculado a producción Fusión)
+### Modelo de VAN (vinculado a producción Fusión y cobre fino)
 
-Con escenario de mejora del **70%** sobre pérdidas atribuibles:
+Con escenario de mejora del **70%** sobre pérdidas atribuibles a CAP-3:
 
-```
-Toneladas evitadas/año = 6,255.35 × 0.70 = 4,378.74 ton/año
-Beneficio neto anual  = (Ton evitadas × Valor_US$/ton) − US$ 1,000
-VAN (5 años, 10%)     = Beneficio neto anual × 3.7908
+```text
+Toneladas de fusión evitadas/año = 6,255.35 × 0.70 = 4,378.74 ton/año
 ```
 
-| Valor US$/ton | Beneficio neto anual (US$) | VAN 5 años @10% (US$) |
-|---|---|---|
-| 25 | 108,468 | 411,181 |
-| 50 | 217,937 | 826,153 |
-| 75 | 327,406 | 1,241,124 |
-| 100 | 436,874 | 1,656,096 |
-| 150 | 655,811 | 2,486,040 |
-| 200 | 874,748 | 3,315,983 |
+#### Supuestos económicos incorporados (presupuesto 2026)
 
-**Punto de equilibrio:** Valor ≥ 0.228 US$/ton para cubrir OPEX. El payback es prácticamente inmediato para cualquier criterio económico realista.
+- **41.176 ton de cobre fino = US$ 20,7 MM**
+- **Ley de cobre presupuesto 2026 = 29,89%**
+- La fusión se convierte a cobre fino equivalente usando la ley presupuestada.
 
-> **Nota:** El VAN oficial se cerrará una vez que Control de Gestión defina el valor unitario (US$/ton de fusión no perdida) según criterio corporativo.
+#### 1) Valor unitario estimado (US$/ton Cu fino)
+
+```text
+Valor Cu fino = 20,700,000 / 41,176 = 502.72 US$/ton Cu fino
+```
+
+#### 2) Cobre fino recuperable asociado a mejora CAP-3
+
+```text
+Cu fino evitado/año = 4,378.74 × 29.89% = 1,308.81 ton Cu fino/año
+```
+
+#### 3) Beneficio económico anual (nuevo criterio)
+
+```text
+Beneficio bruto anual = 1,308.81 × 502.72 = US$ 657,962.68/año
+Beneficio neto anual  = 657,962.68 − 1,000 (OPEX nube) = US$ 656,962.68/año
+```
+
+#### 4) VAN (5 años, 10%)
+
+```text
+VAN = Beneficio neto anual × 3.7908
+VAN = 656,962.68 × 3.7908 = US$ 2,490,414.14
+```
+
+### Resultado económico actualizado (con datos de presupuesto 2026)
+
+| Indicador | Valor |
+|---|---:|
+| Toneladas de fusión evitadas/año | 4,378.74 ton/año |
+| Ley de cobre presupuestada | 29.89% |
+| Cobre fino recuperable estimado | 1,308.81 ton Cu fino/año |
+| Valor unitario Cu fino estimado | 502.72 US$/ton |
+| Beneficio bruto anual | 657,962.68 |
+| OPEX anual nube | 1,000.00 |
+| **Beneficio neto anual** | **656,962.68** |
+| **VAN 5 años @10%** | **2,490,414.14** |
+
+> **Interpretación:** Con los supuestos de valorización y ley informados para presupuesto 2026, el caso de negocio del sistema CAP-3 mantiene un beneficio anual alto y un VAN > US$ 2,49 MM, con CAPEX = 0 y payback prácticamente inmediato.
+
+> **Nota metodológica:** Este cálculo transforma las toneladas de fusión evitadas en toneladas de cobre fino equivalentes usando la ley presupuestada (29,89%), y luego valoriza el cobre fino con la relación presupuestaria indicada.
 
 ---
 
 ## 🧱 Arquitectura del repositorio
 
-```
+```text
 ENF_AC_DCH/
-├── script.py                                        # Dashboard Streamlit (7 tabs, 740 líneas)
+├── script.py                                        # Dashboard Streamlit (7 tabs)
 ├── requirements.txt
 ├── data/
-│   ├── acid_coolers_CAP3_synthetic_2years.csv        # Dataset principal ácido (3 enfriadores, 2 años)
-│   └── t_water_in_out_CAP3_synthetic_2years.csv      # Dataset agua enfriamiento (sep=";", decimales ",")
+│   ├── acid_coolers_CAP3_synthetic_2years.csv       # Dataset principal ácido (3 enfriadores, 2 años)
+│   └── t_water_in_out_CAP3_synthetic_2years.csv     # Dataset agua enfriamiento (sep=";", decimales ",")
 ├── docs/
-│   ├── Documentacion_Tecnica_FINAL.pdf               # Doc. técnica v4.0 (12 págs, ecuaciones completas)
-│   ├── Propuesta_Marinovic_FINAL.pdf                 # Propuesta + caso de negocio (11 págs)
-│   └── Analisis_Economico_CAP3_VAN.pdf               # Análisis VAN con sensibilidad
+│   ├── Documentacion_Tecnica_ACTUALIZADA.pdf        # Documentación técnica
+│   ├── Propuesta_Marinovic_ACTUALIZADA.pdf          # Propuesta + caso de negocio
+│   └── Analisis_Economico_CAP3_VAN.pdf              # Análisis económico VAN
 └── README.md
 ```
 
@@ -463,7 +527,7 @@ streamlit run script.py
 4. **Tabs 2–5:** Revisar métricas térmicas, fouling, criticidad y predicciones ML.
 5. **Tab 6:** Consultar recomendaciones priorizadas de operación/mantención.
 6. **Tab 7:** Vista ejecutiva comparativa de los 3 enfriadores para decisión rápida.
-7. Exportar datos filtrados en CSV desde Tab 6.
+7. Exportar datos filtrados en CSV desde el módulo de recomendaciones o resumen (según configuración del dashboard).
 
 ---
 
@@ -488,7 +552,7 @@ streamlit run script.py
 | Test Case | Condición | Resultado esperado |
 |---|---|---|
 | 1 | 0 tubos aislados | Factor = 1.0, Q_design = base ✅ |
-| 2 | 50 tubos (Secado) | Factor = 0.921, Q_design = 12,189 kcal/h ✅ |
+| 2 | 50 tubos (Secado) | Factor ≈ 0.921, Q_design ajustado coherente ✅ |
 | 3 | Todos aislados | Factor = 0, sistema alerta error ✅ |
 
 ### Calibración con datos reales (recomendado)
@@ -504,9 +568,13 @@ streamlit run script.py
 
 | Fase | Plazo | Iniciativas |
 |---|---|---|
-| **Fase 2** | 6–12 meses | Integración SAP PM (OT automáticas), alertas email/SMS, dashboard móvil, reportes semanales automáticos |
-| **Fase 3** | 12–24 meses | Deep Learning (LSTM series temporales), optimización multi-objetivo, gemelo digital, integración con torres y convertidores |
-| **Fase 4** | 24+ meses | IA generativa para reportes, realidad aumentada para mantención, edge computing tiempo real, replicación divisional |
+| Fase 2 | 6–12 meses | Integración SAP PM (OT automáticas), alertas email/SMS, dashboard móvil, reportes semanales automáticos |
+| Fase 3 | 12–24 meses | Deep Learning (LSTM series temporales), optimización multi-objetivo, gemelo digital, integración con torres y convertidores |
+| Fase 4 | 24+ meses | IA generativa para reportes, realidad aumentada para mantención, edge computing tiempo real, replicación divisional |
+
+### ✅ Backlog de mejoras técnicas (próximas iteraciones)
+
+- [ ] Integración de instrumentación crítica para mejorar resultados del modelo (termocuplas de entrada/salida de agua y ácido, presiones diferenciales, caudales, conductividad y variables operacionales complementarias).
 
 ### Escalabilidad
 
@@ -519,32 +587,78 @@ El sistema es **100% replicable** a otros equipos con esfuerzo marginal (arquite
 
 ---
 
+## 📄 Documentación del proyecto (carpeta `docs/`)
+
+Este repositorio incluye documentación de soporte en PDF dentro de la carpeta `docs/`:
+
+- **Documentación Técnica:** fundamentos, ecuaciones, metodología y arquitectura.
+- **Propuesta del Proyecto:** caso de uso, alcance, implementación y beneficios.
+- **Análisis Económico VAN:** sensibilidad económica y evaluación financiera del proyecto.
+
+### Cómo agregar una carpeta con documentos al repositorio (GitHub)
+
+1. Crear la carpeta en tu proyecto local:
+
+```bash
+mkdir docs
+```
+
+2. Copiar los documentos dentro de `docs/` (PDF, PPT, DOCX, etc.).
+
+3. Verificar estructura:
+
+```bash
+ls -R
+```
+
+4. Agregar archivos a Git:
+
+```bash
+git add docs/
+```
+
+5. Confirmar cambios:
+
+```bash
+git commit -m "Agrega documentación técnica y económica en carpeta docs"
+```
+
+6. Subir a GitHub:
+
+```bash
+git push origin main
+```
+
+> Si usas la interfaz web de GitHub, también puedes entrar al repositorio, presionar **Add file → Upload files** y arrastrar una carpeta (o sus archivos) dentro de `docs/`.
+
+---
+
 ## 📖 Referencias bibliográficas
 
-1. **Perry, R.H. & Green, D.W.** (2019). *Perry's Chemical Engineers' Handbook*, 9th Edition. McGraw-Hill.
-2. **Hewitt, G.F., Shires, G.L. & Bott, T.R.** (2008). *Heat Exchanger Design Handbook*. Begell House.
-3. **Müller-Steinhagen, H.** (2000). *Fouling of Heat Exchangers: Fundamentals and Mitigation*. Publico Publications.
-4. **TEMA** (2019). *Standards of the Tubular Exchanger Manufacturers Association*, 10th Edition.
-5. **Susto, G.A., Schirru, A., Pampuri, S., McLoone, S. & Beghi, A.** (2015). Machine Learning for Predictive Maintenance: A Multiple Classifier Approach. *IEEE Transactions on Industrial Informatics*, 11(3), 812–820.
-6. **Bott, T.R.** (1995). *Fouling of Heat Exchangers*. Elsevier Science.
-7. **Incropera, F.P., DeWitt, D.P., Bergman, T.L. & Lavine, A.S.** (2007). *Fundamentals of Heat and Mass Transfer*, 6th Edition. John Wiley & Sons.
-8. **Pedregosa, F. et al.** (2011). Scikit-learn: Machine Learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830.
-9. **Breiman, L.** (2001). Random Forests. *Machine Learning*, 45(1), 5–32.
-10. **Liu, F.T., Ting, K.M. & Zhou, Z.H.** (2008). Isolation Forest. *IEEE International Conference on Data Mining*, 413–422.
-11. **Codelco** (2020). *Especificaciones Técnicas Enfriadores CAP-3*. Documentación interna, División Chuquicamata.
-12. **Streamlit Documentation** – https://docs.streamlit.io
+1. **Perry, R.H. & Green, D.W.** (2019). *Perry's Chemical Engineers' Handbook*, 9th Edition. McGraw-Hill.  
+2. **Hewitt, G.F., Shires, G.L. & Bott, T.R.** (2008). *Heat Exchanger Design Handbook*. Begell House.  
+3. **Müller-Steinhagen, H.** (2000). *Fouling of Heat Exchangers: Fundamentals and Mitigation*. Publico Publications.  
+4. **TEMA** (2019). *Standards of the Tubular Exchanger Manufacturers Association*, 10th Edition.  
+5. **Susto, G.A., Schirru, A., Pampuri, S., McLoone, S. & Beghi, A.** (2015). Machine Learning for Predictive Maintenance: A Multiple Classifier Approach. *IEEE Transactions on Industrial Informatics*, 11(3), 812–820.  
+6. **Bott, T.R.** (1995). *Fouling of Heat Exchangers*. Elsevier Science.  
+7. **Incropera, F.P., DeWitt, D.P., Bergman, T.L. & Lavine, A.S.** (2007). *Fundamentals of Heat and Mass Transfer*, 6th Edition. John Wiley & Sons.  
+8. **Pedregosa, F. et al.** (2011). Scikit-learn: Machine Learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830.  
+9. **Breiman, L.** (2001). Random Forests. *Machine Learning*, 45(1), 5–32.  
+10. **Liu, F.T., Ting, K.M. & Zhou, Z.H.** (2008). Isolation Forest. *IEEE International Conference on Data Mining*, 413–422.  
+11. **Codelco** (2020). *Especificaciones Técnicas Enfriadores CAP-3*. Documentación interna, División Chuquicamata.  
+12. **Streamlit Documentation**.
 
 ---
 
 ## 👤 Autor
 
-**Sebastián Marinovic Leiva**
-Ingeniero de Procesos
-Superintendencia Planta de Ácido y Oxígeno
-Gerencia de Fundición – División Chuquicamata, Codelco Chile
+**Sebastián Marinovic Leiva**  
+Ingeniero de Procesos  
+Superintendencia Planta de Ácido y Oxígeno  
+Gerencia de Fundición – División Chuquicamata, Codelco Chile  
 
-📧 [sebamarinovic.leiva@gmail.com](mailto:sebamarinovic.leiva@gmail.com)
-📱 +56 9 7624 3605
+📧 **sebamarinovic.leiva@gmail.com**  
+📱 **+56 9 7624 3605**
 
 ---
 
